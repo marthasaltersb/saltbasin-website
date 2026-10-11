@@ -1,6 +1,8 @@
-# Test result — release-cut-and-session-plans — round 1
+# Test result — release-cut-and-session-plans — round 1 (re-test after fixes)
 
-Commit tested: 384d046 (integration head). Baseline v1, spec sha 89a7db47639d75cb09ef8ec0531d737c5314d0746b9f467c6f25c035270ebc64. Surfaces: desktop 1280x900, mobile 390x844 (touch), cli. Evidence: /var/tmp/sbpg/release-loop/release-cut-and-session-plans/round-1/ (steps.jsonl, screenshots).
+Commit tested: 1032699 (integration head `claude/zealous-meitner-5tuft5`). Baseline v1, spec sha 89a7db47639d75cb09ef8ec0531d737c5314d0746b9f467c6f25c035270ebc64 (baseline check passed; no version change, so no diff table). Surfaces: desktop 1280x900, mobile 390x844 (touch, taps), cli. Each browser pass ran on its own freshly created and seeded database (production build served on port 16302), test accounts from `scripts/create-test-member.mjs`. Evidence: /var/tmp/sbpg/release-loop/release-cut-and-session-plans/round-1/ (steps.jsonl, screenshots named `<surface>-<step id>.png`).
+
+This report replaces an earlier round-1 file written against commit 384d046. The two runs agree: the same 9 steps fail.
 
 ```json
 {
@@ -9,7 +11,7 @@ Commit tested: 384d046 (integration head). Baseline v1, spec sha 89a7db47639d75c
   "specSha256": "89a7db47639d75cb09ef8ec0531d737c5314d0746b9f467c6f25c035270ebc64",
   "total": 62,
   "passed": 53,
-  "failed": ["J3.1","J3.4","J3.5","J6.6","J7.8","J7.9","J7.11","J8.6","J8.7"],
+  "failed": ["J3.1", "J3.4", "J3.5", "J6.6", "J7.8", "J7.9", "J7.11", "J8.6", "J8.7"],
   "blocked": [],
   "notRun": [],
   "preconditionsFailed": [],
@@ -17,26 +19,45 @@ Commit tested: 384d046 (integration head). Baseline v1, spec sha 89a7db47639d75c
 }
 ```
 
-Result: NOT PASSED (53 of 62).
+Result: NOT passed (53 of 62 steps).
 
-## Failures
+## Failures (9 steps, two causes)
 
-Eight of nine share one cause: the spec fixes `in-app-release-loop` at 60/60 (round 3, baseline v2), but the integration branch now holds `docs/test-results/in-app-release-loop/round-4.md` with 59/60 on baseline v2. The product correctly reads the newest round, so it records actual 59/60 and Missed. The spec's data is stale. Proposed amendment, not edited: change the expected actual in J3.1, J3.4, J3.5, J7.8, J7.9, J7.11, J8.6, J8.7 to 59/60 (round 4, met false), or pin the fixture feature to one that has a stable round.
+1. **Stale fixture score for `in-app-release-loop`** (J3.1, J3.4, J3.5, J7.8, J7.9, J7.11, J8.6, J8.7; J3.x and J7.11 failed on both desktop and mobile). The spec says the feature is "frozen at 60 of 60 on baseline v2, round 3". `docs/test-results/in-app-release-loop/round-4.md` now exists with baseline 2, passed 59 of 60, so the platform (correctly, reading the newest round) records `actual 59/60`, a red **Missed** label and `"round":4,"passed":59`. Everything else those steps check matched the spec: label and alert wording, the 409 refusal, the re-estimate counter and "original kept", no score input on the card, `recorded:true`, closed card, `closeNote`, and `guided-training-agent` showing `actual not validated` with no label and no 0. Proposed amendment: use a feature whose newest round cannot change, or state the expected score as the newest round's score.
+   - J3.1 seen: `in-app-release-loop · size S · expected 60/60 · actual 59/60` + red **Missed** (expected `actual 60/60` + green **Met**).
+   - J3.4 seen: `1 re-estimate (original kept)` present; item line `expected 60/60 · actual 59/60` (original expected unchanged).
+   - J3.5 seen: `in-app-release-loop · size - · expected 60/62 · actual 59/60` + red **Missed** (expected `actual 60/60`).
+   - J7.8 seen: `"recorded":true`, result `{"feature":"in-app-release-loop","round":4,"passed":59,"total":60,"baseline":2,"report":"docs/test-results/in-app-release-loop/round-4.md"}` (expected round 3, 60/60).
+   - J7.9 seen: row for `S-garden-api` with `"actual":"59/60","met":false` (expected `"60/60"`, `true`).
+   - J7.11 seen: card `S-garden-api` closed, text `done`, item `expected 60/60 · actual 59/60 · Missed` (expected `actual 60/60`).
+   - J8.6 seen: merge result `passed` 59 (expected 60), total 60, baseline 2. My first J8.6 line was a false pass (my check matched the estimate's `expect.passed`); a corrected fail line is appended to steps.jsonl and the score above includes it.
+   - J8.7 seen: `S-garden-mcp` row `actual` `59/60`, `met` false (expected `60/60`, true).
+2. **J6.6 command output wording** (cli). Seen: `Froze 1.0.0 at 1032699: 1/2 planned delivered, 1 carried, 0 in backlog, 0 added after the cut. Opened 1.1.0 with 1 features (1 carried, 0 new).` Expected: `Froze 1.0.0 at <HEAD7>: 1/2 delivered, 1 carried. Opened 1.1.0 with 1 features (1 carried, 0 new).` Counts and commit are right; the sentence now carries the planned/backlog/added-after-cut groups from the release-scope feature. Proposed amendment: replace the expected line with the new wording.
 
-- J3.1 (desktop, mobile): expected item "expected 60/60 · actual 60/60" with green Met; saw actual 59/60 with red Missed. The guided-training-agent line (actual not validated, no label, no 0) was correct.
-- J3.4: item line reads actual 59/60, not 60/60. "1 re-estimate (original kept)" was correct.
-- J3.5: S-garden-02 shows actual 59/60 (expected 60/60). Red Missed was correct.
-- J7.8: merge result is round 4, passed 59, not round 3 / 60.
-- J7.9: row has actual 59/60, met false.
-- J7.11 (desktop, mobile): card shows actual 59/60 · Missed.
-- J8.6: passed 59, round 4.
-- J8.7: S-garden-mcp actual 59/60, met false.
-- J6.6 (a different cause): `release-cut.mjs` printed `Froze 1.0.0 at 384d046: 1/2 planned delivered, 1 carried, 0 in backlog, 0 added after the cut. Opened 1.1.0 with 1 features (1 carried, 0 new).` The spec expects `Froze 1.0.0 at <HEAD7>: 1/2 delivered, 1 carried. Opened 1.1.0 with 1 features (1 carried, 0 new).` The commit, counts and the freeze are correct; the wording differs. Proposed amendment: update the expected text, or restore the shorter message.
+## Fix verification (by step id)
 
-## Notes
+| Bug | Step id(s) | Verdict |
+| --- | --- | --- |
+| B3 parity (cut has UI, API and MCP forms and a parity row) | J8.11 (Capabilities card shows Website ready / API ready / MCP ready with the specified path, routes and tools), J8.12 (`check-interface-parity.mjs` exit 0, last line `OK: the registry matches the code.`) | Verified: both pass. |
+| B7 no durable store | E.3 (after reload: S-garden-01 closed, 02, 03, api, mcp all present), J7.11 | E.3 passes on desktop and mobile. Records are files under `docs/release-log/session-plans/` (no table). J7.11 fails only for the stale score. |
+| B8 report view not on screen | none in the baseline (J7.9, J8.7, E.6 use the API/MCP report) | Still a gap: no screen calls `GET /api/release-cut/sessions/report`. The UI network calls seen were `GET /api/release-cut/releases`, `/releases/:version`, `/sessions`, `POST /sessions/estimate`, `/:session/merge`, `/:session/close`. Expected vs actual does show on each session card. Reported as an observation. |
+| B9 journeys use accounts with no Career Master technologies | none | Not exercised by this spec. |
 
-- J6 ran once (cli). The J7 and J8 cli steps were scored on the desktop pass. On the phone pass the same J7/J8 commands were re-run silently, because that pass has a fresh database and `docs/release-log/session-plans/S-garden-*.json` was cleared (P.2), and J7.11 and E.3 need those cards. All of them showed the same 59/60 diff.
-- The mobile E.3 reload returned to the Release loop panel on its Runs tab, not Session plans. A first run of the script mis-navigated there (a script bug, not a product bug). I re-ran E.3 from the logged-in phone session, reloaded and tapped Session plans, and it passed. The failed script line was removed.
-- No page errors and no failed application requests other than the spec's named 400/409 refusals. The blocked external three.js CDN request is environment noise.
-- Interface parity: every UI capability has its API route and MCP tool (J7 and J8 exercised them with the same results as the UI). The only mismatches are the stale score figures above. No UI_GAP, MOBILE_GAP or MCP_GAP found. E.1 passed on both surfaces (no horizontal scroll, all controls at least 44px).
-- Cleanup: server stopped (PID file), database sb_rl_val_6600_3 dropped, S-garden-*.json removed from the worktree, /tmp/garden-cut removed.
+## Interface parity
+
+- UI to API: each UI action called the route in the spec's parity table. Closing ran without a gate dialog.
+- MCP: the seven `release_cut_*` tools are listed in the specified consecutive order (J8.2); get_release, record_estimate, record_merge, close_session and session_report return the same data as the UI/API (apart from the stale 59/60); a member token gets 403 `forbidden` with the exact message (J8.10). Outside the baseline I also called `release_cut_list_releases` and `release_cut_list_sessions` with a UI-created admin token: they match the Releases and Session plans tabs. No `MCP_GAP`.
+- Mobile: every UI journey ran at 390px with taps; no `MOBILE_GAP`. E.1 passes on both surfaces (no horizontal scroll; every control below the tab row at least 44px tall). No `UI_GAP`.
+
+## Observations (not in the score)
+
+1. Stale red alerts accumulate on Session plans: after the J2.2 to J2.5 refusals each later alert is shown together with all earlier ones, and they are still on screen after a successful save. On the phone the fixed red banner for the earlier "sixty" error covers the bottom of the card and hides part of **Close session** (see `mobile-J3.1.png`). Steps pass literally; the screen is confusing and partly obscured.
+2. Connected Agents shows the MCP address as `http://localhost:5173/mcp` (the Vite dev origin) although the app was served on 16302.
+3. The session report endpoint and `release_cut_session_report` tool have no screen (B8).
+4. The estimate item for `in-app-release-loop` carries `outOfScope: true` (the feature is backlog); the card does not show this.
+5. Environment: the machine was heavily shared. After "Back to World", clicking a card often hung Playwright for 25 to 45 seconds even though the panel opened; the harness retried or accepted the click when the panel was visible. One aborted chunk request (`ConnectedAgentsPanel-*.js`, `net::ERR_ABORTED`) came from the harness reloading during a retry. No page error occurred in either pass. Several earlier attempts were discarded and rerun from a fresh database because a previous attempt's background process kept writing to the same database and files; none of that data is in this score.
+6. The diff stat of `docs/release-log/releases` is empty (E.4 pass); the fixture cut ran only against the fixture folder.
+
+## Cleanup
+
+Test server stopped via its PID file, database `sb_rl_val_16300_1` dropped, `S-garden-*.json` leftovers removed from the worktree. The fixture folder and scratch scripts remain under /var/tmp/sbpg/agents/val-16300-1/.
