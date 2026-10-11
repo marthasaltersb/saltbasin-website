@@ -118,6 +118,30 @@ export const PORTS = [
       ],
     }],
   },
+  {
+    // Internal (journey-flow-experience-mapping, 2026-10-11): where a published journey flow's per-step experience values
+    // live (asset, layer, crystal, animation, interaction, destination). Not listed on the Render Bindings screens
+    // (`internal: true`); the Journey Flow Studio Settings screen edits which channels are mapped.
+    port_key: 'journey-flow', name: 'Journey flow steps', port_type: 'manual', native_system_type: 'flow_studio', internal: true,
+    policy: { viewRoles: ['admin', 'member'], note: 'Values typed into a flow step in the Journey Flow Studio. The flow document is the data.' },
+    objects: [{
+      object_key: 'steps', native_object_name: 'flow steps', business_definition: 'A step of a journey flow and the experience it renders as.',
+      fields: [
+        { field_key: 'scene_asset', native_field_name: 'sceneAsset', kind: 'text', editable_roles: ['admin', 'member'], flowField: 'sceneAsset', check: 'path_or_scene',
+          business_definition: 'Static asset path or scene key shown for the step.', value_domain: 'path starting with / or a scene key' },
+        { field_key: 'world_layer', native_field_name: 'worldLayer', kind: 'text', editable_roles: ['admin', 'member'], flowField: 'worldLayer', check: 'catalog:worldLayers',
+          business_definition: 'World Shell layer the step opens.', value_domain: 'a World Shell layer from the layer list' },
+        { field_key: 'crystal_variant', native_field_name: 'crystalVariant', kind: 'text', editable_roles: ['admin', 'member'], flowField: 'crystalVariant', check: 'catalog:crystalVariants',
+          business_definition: 'Crystal variant the step is drawn as.', value_domain: 'a crystal variant from the shared crystal family' },
+        { field_key: 'animation', native_field_name: 'animation', kind: 'text', editable_roles: ['admin', 'member'], flowField: 'animation', check: 'text',
+          business_definition: 'Animation played for the step.', value_domain: 'text' },
+        { field_key: 'interaction', native_field_name: 'interactionKind', kind: 'text', editable_roles: ['admin', 'member'], flowField: 'interactionKind', check: 'catalog:interactions',
+          business_definition: 'How the person interacts with the step.', value_domain: 'an interaction from the interaction list' },
+        { field_key: 'destination', native_field_name: 'destinationLink', kind: 'text', editable_roles: ['admin', 'member'], flowField: 'destinationLink', check: 'link',
+          business_definition: 'Where the step sends the person.', value_domain: 'a path starting with / or an https:// address' },
+      ],
+    }],
+  },
 ];
 
 // Visual channels each rendering can draw. A channel with no binding is "not mapped".
@@ -145,6 +169,18 @@ export const RENDERINGS = [
       { key: 'crystal.depth', mark: 'Crystal', channel: 'Depth' },
     ],
   },
+  {
+    key: 'journey-flow', label: 'Journey flow experience', subjectKind: 'flow_step', subjectNoun: 'step', viewRoles: ['admin', 'member'], internal: true,
+    description: 'The experience each step of a published journey flow renders as.',
+    channels: [
+      { key: 'step.asset', mark: 'Step', channel: 'Static asset or scene' },
+      { key: 'step.layer', mark: 'Step', channel: 'World Shell layer' },
+      { key: 'step.crystal', mark: 'Step', channel: 'Crystal variant' },
+      { key: 'step.animation', mark: 'Step', channel: 'Animation' },
+      { key: 'step.interaction', mark: 'Step', channel: 'Interaction' },
+      { key: 'step.destination', mark: 'Step', channel: 'Destination link' },
+    ],
+  },
 ];
 
 const src = (port_key, object_key, field_key) => ({ port_key, object_key, field_key });
@@ -168,6 +204,9 @@ export const DEFAULT_BINDINGS = [
     transform: 'arc', domain: [0, 65], transformText: 'urgency / 65 -> arc', legend: 'Gold ring = urgency (priority x effort)', change_policy: 'live' },
   { id: 'member-board:crystal.badge', rendering: 'member-board', channel: 'crystal.badge', source: src('sandbox-crm', 'accounts', 'stage'),
     transform: 'label', transformText: 'CRM stage text', legend: 'Badge = CRM account stage', change_policy: 'requires_approval', approver: 'a data owner and a final approver' },
+  ...[['step.asset', 'scene_asset', 'Static asset or scene'], ['step.layer', 'world_layer', 'World Shell layer'], ['step.crystal', 'crystal_variant', 'Crystal variant'],
+    ['step.animation', 'animation', 'Animation'], ['step.interaction', 'interaction', 'Interaction'], ['step.destination', 'destination', 'Destination link']]
+    .map(([channel, field, label]) => ({ id: `journey-flow:${channel}`, rendering: 'journey-flow', channel, source: src('journey-flow', 'steps', field), transform: 'label', transformText: 'value as text', legend: `${label} = the step's ${label.toLowerCase()} field`, change_policy: 'live' })),
 ];
 
 export const TRANSFORMS = ['status_tone', 'scale', 'arc', 'count', 'pulse', 'label'];

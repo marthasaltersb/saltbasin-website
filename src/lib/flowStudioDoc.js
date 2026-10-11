@@ -31,6 +31,7 @@ export function normalizeDoc(raw, def) {
     const edges = (Array.isArray(x.edges) ? x.edges : []).map((e) => ({
       id: s(e.id), from: s(e.from), to: s(e.to), label: s(e.label), params: s(e.params), notes: s(e.notes),
       scenarioTags: tags(e.scenarioTags), overlays: isObj(e.overlays) ? e.overlays : {},
+      bind: isObj(e.bind) ? { ...(isObj(e.bind.condition) ? { condition: { field: s(e.bind.condition.field), op: s(e.bind.condition.op), value: s(e.bind.condition.value) } } : {}) } : {},
     }));
     return { nodes, edges, lanes, scenarios: tags(x.scenarios) };
   };
@@ -114,7 +115,7 @@ export function parseImport(text, def) {
 export const shapesInUse = (doc) => [...new Set(['current', 'future'].flatMap((k) => doc.states[k].nodes.map((n) => n.type)))];
 export const fieldsInUse = (doc) => {
   const used = new Set();
-  for (const k of ['current', 'future']) for (const n of doc.states[k].nodes) for (const m of Object.values(n.meta || {})) for (const [f, v] of Object.entries(m || {})) if (typeof v === 'string' && v.trim()) used.add(f);
+  for (const k of ['current', 'future']) for (const n of doc.states[k].nodes) for (const m of Object.values(n.meta || {})) for (const [f, v] of Object.entries(m || {})) if ((typeof v === 'string' && v.trim()) || (Array.isArray(v) && v.length)) used.add(f);
   return [...used];
 };
 
@@ -150,12 +151,13 @@ export function toJourneyDefinition(doc, def, { state = 'future' } = {}) {
     variants: n.scenarioTags, actors: m(n).actors || '', capabilities: m(n).capabilities || '', gateKey: m(n).gateKey || '',
     system: { name: m(n).systemName || '', authority: m(n).systemAuthority || '' }, actionAuthority: m(n).actionAuthority || '',
     inputs: m(n).inputs || '', outputs: m(n).outputs || '',
-    experience: { scene: m(n).sceneAsset || '', animation: m(n).animation || '', destination: m(n).destinationLink || '', layout: m(n).visualLayout || '', interaction: m(n).interaction || '' },
+    experience: { scene: m(n).sceneAsset || '', animation: m(n).animation || '', destination: m(n).destinationLink || '', layout: m(n).visualLayout || '', interaction: m(n).interaction || '', worldLayer: m(n).worldLayer || '', crystalVariant: m(n).crystalVariant || '', interactionKind: m(n).interactionKind || '' },
+    bindings: { variants: m(n).bindVariants || [], actors: m(n).bindActors || [], capabilities: m(n).bindCapabilities || [], systemOfRecord: m(n).bindSystemOfRecord || '', actionAuthority: m(n).bindActionAuthority || [], reads: m(n).bindReads || [], writes: m(n).bindWrites || [] },
     scenarioOverrides: Object.fromEntries(Object.entries(n.meta || {}).filter(([k, v]) => k !== 'base' && v && Object.keys(v).length)),
   }));
   const gates = st.nodes.filter((n) => shape(n.type)?.branching).map((n) => ({
     id: n.id, key: m(n).gateKey || n.id, label: n.label, kind: n.type, parameters: m(n).decisionParams || '',
-    branches: st.edges.filter((e) => e.from === n.id).map((e) => ({ to: e.to, label: e.label, condition: e.params, notes: e.notes, variants: e.scenarioTags, overlays: e.overlays })),
+    branches: st.edges.filter((e) => e.from === n.id).map((e) => ({ to: e.to, label: e.label, condition: e.params, structuredCondition: e.bind?.condition || null, notes: e.notes, variants: e.scenarioTags, overlays: e.overlays })),
   }));
   const transitions = st.edges.map((e) => ({ id: e.id, from: e.from, to: e.to, label: e.label, variants: e.scenarioTags }));
   return {

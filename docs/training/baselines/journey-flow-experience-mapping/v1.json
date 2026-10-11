@@ -1,0 +1,767 @@
+{
+  "feature": "journey-flow-experience-mapping",
+  "spec": "docs/training/journey-flow-experience-mapping.md",
+  "version": 1,
+  "frozenAt": "2026-10-11T02:03:13.420Z",
+  "commitAtFreeze": "d93a17e730ec473ce7ab55fb32466d5f8acd22e7",
+  "specSha256": "dcda6c46b487e91cff080e2c332822f810a6b7bac2d899e78d01e4e1af674f94",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "bb931dcbf0f9f6bd",
+      "summary": "MEMBER WINDOW: sign in as member@test.local and open `/world`. Expect the World Shell with the tabs **World**, **Journeys**, **Classic Tools**."
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "8b4e39307b899b13",
+      "summary": "MEMBER WINDOW: click **Journeys**, then **Journey Flow Studio**. Expect the heading **Journey Flow Studio**, the tabs **Flows** and **Templates** (no **Settings"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "0f0eab5bcc0f67a6",
+      "summary": "ADMIN WINDOW: sign in as the administrator, open `/world`, **Journeys**, **Journey Flow Studio**. Expect the tabs **Flows**, **Templates**, **Settings**. (Do no"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a8453fc736ea6574",
+      "summary": "MEMBER WINDOW: type **Seed Shop Orders** in **New flow name**, choose **Order to delivery** in **Start from**, click **Create flow**. Expect the confirmation li"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c0d529cb3046ba59",
+      "summary": "Click **Future state**, then tap `Step: Check live stock` in **Steps and connectors**. Expect the Inspector heading `Step: Check live stock`, the group names to"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e6cb12d2e01e0156",
+      "summary": "In **Structured bindings**, in the **Add…** list under **Actors (roles or profiles)** choose **Platform agent**. Expect that group to show a line `Platform agen"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4aca875176be1cb3",
+      "summary": "In **System of record (data port)** choose **Release tracker**. Expect the list to read **Release tracker**."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "be6f3e9aa30fafb4",
+      "summary": "In the **Add…** list under **Platform capabilities** choose **Preview the impact and publish a flow**. Expect that line with a **Remove** button under **Platfor"
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9b2755ded0c89c80",
+      "summary": "Under **Data this step reads**: choose `career_jobs (15)` in **Data this step reads: data object**, then `title (text)` in **Data this step reads: field**. Expe"
+    },
+    {
+      "id": "J1.7",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f03ffbc2c585aa0b",
+      "summary": "In the **Add…** list under **Action authority (permission or licence)** choose **flows.publish**. Expect the line `flows.publish`."
+    },
+    {
+      "id": "J1.8",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c061ef847c5d1612",
+      "summary": "Under **Data this step writes**: choose `career_jobs (15)` then `key_metrics (text)`. Expect the line `career_jobs.key_metrics`."
+    },
+    {
+      "id": "J1.9",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b12526c02f002924",
+      "summary": "Click **Save draft**. Expect `Draft saved as version 2`."
+    },
+    {
+      "id": "J1.10",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d252b0ce181f61b0",
+      "summary": "Click **← All flows**, open **Seed Shop Orders**, click **Future state**, tap `Step: Check live stock`. Expect the lines `Platform agent`, `career_jobs.title`, "
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "69a53b7145e766ea",
+      "summary": "Tap the connector `→ Pick and pack (Yes)` under `Decision: In stock?`. Expect the Inspector heading `Connector: In stock? → Pick and pack`, a group **Branch con"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "814927756c4e02ba",
+      "summary": "In **Condition: data object** choose `career_jobs (15)`, in **Condition: field** choose `order_index (integer)`, in **Condition: operator** choose **is greater "
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "086342244f3d504f",
+      "summary": "Click **Save draft**. Expect `Draft saved as version 3`."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f042b62e3be0e57d",
+      "summary": "Tap `Step: Check live stock`. Expect **Scene or static asset** reading `scene.order-check` and **Destination link** reading `/orders/status` (from the template)"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "449460afc63ac263",
+      "summary": "Click **Save draft**. Expect `Draft saved as version 4`."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6b7ee95a8c19fa4e",
+      "summary": "Click **Journey**. Expect the line `Preview of saved draft version 4.` (the flow is not published yet, so the draft is shown), the pill `1 warning(s)` and the f"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "76ce0c5976a421d3",
+      "summary": "Click **Preview published version**. Expect the red message `This flow has not been published yet. Publish it first, or preview the draft.` and no preview. Clic"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b70f8801e33478aa",
+      "summary": "Read the preview. Expect **Generated user journey** (variant **Base (L2)**) to list in order: `Order received terminal · Customer`, `Check live stock step · Ope"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4f2bd2499209031c",
+      "summary": "In **Impact of activating** expect the lines `First activation: flow version 4 becomes a journey the platform runs.`, `Gates added 2, removed 0, changed 0; 3 st"
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3ace2b7c3fc19c5e",
+      "summary": "Tap `Step: Check live stock`, type `/world` in **Destination link**, click **Save draft** (expect `Draft saved as version 5`), click **Journey** if it closed, c"
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "63d38d070df8ec11",
+      "summary": "Click **Publish**, then **Approve and publish**. Expect `Published version 5`. Click **Journey**, then **Preview published version**. Expect `Preview of publish"
+    },
+    {
+      "id": "J4.7",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5b4a3d912f302763",
+      "summary": "Expect, because a member may not activate, the text `Your role cannot activate journeys. An administrator can allow it in the studio Settings, or activate it fo"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f0c1cf356113468a",
+      "summary": "ADMIN WINDOW: **Flows**. Expect the button **Seed Shop Orders** with `Version 5 · published`. Open it, click **Journey**. Expect `Preview of published version 5"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d60bfce354935766",
+      "summary": "Type `First activation` in **Activation note**, click **Approve and activate**. Expect `Journey activated from version 5`, and under **Active journey** the line"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e100d0e90865cf36",
+      "summary": "Click **History**. Expect a row starting `journey activated v5 · source action: journey_publish · admin@test.local` with the note `First activation` and the imp"
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "237cbb34930d8a2e",
+      "summary": "MEMBER WINDOW: reload `/world`, open **Journey Flow Studio**, open **Seed Shop Orders**, click **Journey**. Expect under **Active journey** `Running as flow-<ID"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6345c3d9eb096bdf",
+      "summary": "In the MEMBER WINDOW address bar open `/api/journey-rods/me/world`. Expect JSON with a journey whose `scenarioKey` is `flow-<ID>` and `rodType` `journey_flow_ru"
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "831ea28ef5ac2180",
+      "summary": "MEMBER WINDOW: click **Future state**, tap `Decision: In stock?`, change **Gate key** to `stock_ready`, click **Save draft** (expect `Draft saved as version 6`)"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "72a4502e2600d535",
+      "summary": "ADMIN WINDOW: **← All flows**, open **Seed Shop Orders**, click **Journey**. Expect the impact lines `Replaces the active journey (flow version 5) with flow ver"
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6124386d85eae38b",
+      "summary": "Click **Approve and activate**. Expect `Journey activated from version 6` and `Running as flow-<ID> from flow version 6` with `1 journey(s) running`."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "04af298a04111929",
+      "summary": "ADMIN WINDOW: **← All flows**, tab **Settings**. In the card **Experience channels** expect six channels (**Static asset or scene**, **World Shell layer**, **Cr"
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "492ff1ffe66c5132",
+      "summary": "Click **Approve and apply**. Expect `Experience channels saved` and the channel unticked."
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2b115b039d270260",
+      "summary": "MEMBER WINDOW: **← All flows**, open **Seed Shop Orders**, **Journey**. Expect the experience summary `5 value(s) render · 25 not set · 6 not mapped · 0 invalid"
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1cd22a9e69cda1e0",
+      "summary": "ADMIN WINDOW: tick **Channel Destination link mapped**, note `Destination is ready`, **Save experience channels**, **Approve and apply**. Expect `Experience cha"
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cbcc8ca80ba3c13d",
+      "summary": "ADMIN WINDOW: in **Option lists for structured bindings** click **Add actor option**; set the new row's key (**Actor options 6 key**) to `courier` and label to "
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bbfa4b65625a54e4",
+      "summary": "MEMBER WINDOW: **← All flows**, open **Seed Shop Orders**, **Future state**, tap `Step: Pick and pack`, in the **Add…** list under **Actors (roles or profiles)*"
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e72a29df9546a97b",
+      "summary": "MEMBER WINDOW: **Journeys → Connected Agents**. Type `Journey probe` in **Token name**, tick **flowjourney.read** and **flowjourney.write** (nothing else; a thi"
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "be256d703bd3b4a7",
+      "summary": "Run `curl -s -c m.jar -H 'Content-Type: application/json' -d '{\"email\":\"member@test.local\",\"password\":\"TestPass!2345\"}' <API_BASE>/api/auth/login`, then `curl -"
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "64378adac3ee068d",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 0 and exactly these lines in this order: `flow_journey_catalogs_re"
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "057b71cf59be062e",
+      "summary": "Run `... call flow_journey_catalogs_read '{\"object\":\"career_jobs\"}'`. Expect `isError: false` and a field with key `career_jobs.title`."
+    },
+    {
+      "id": "J9.5",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "30ae61c1d1b664b6",
+      "summary": "Run `... call flow_journey_preview '{\"flowId\": <FLOW_ID>}'`. Expect `isError: false`, `\"ok\": true` and `\"scenarioKey\": \"flow-<FLOW_ID>\"`."
+    },
+    {
+      "id": "J9.6",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9bed285812b81acb",
+      "summary": "Run `... call flow_journey_activate '{\"flowId\": <FLOW_ID>, \"approved\": \"x\"}'`. Expect `isError: true`, `status` 403, `code` `scope_not_granted` and a message co"
+    },
+    {
+      "id": "J9.7",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "484e20fdc18aaf7f",
+      "summary": "Run `... call flow_experience_channels_read`. Expect `isError: false` and six channels including `step.destination`."
+    },
+    {
+      "id": "J9.8",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "2abba10415b3a3da",
+      "summary": "Run `curl -s -i -b m.jar -H 'Content-Type: application/json' -d '{\"approved\":\"x\"}' <API_BASE>/api/flow-studio/flows/<FLOW_ID>/journey/activate`. Expect status `"
+    },
+    {
+      "id": "J9.9",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cf92fdd2afe6c4b6",
+      "summary": "Log in as the administrator the same way (cookie jar `a.jar`) and run the same call with `{\"approved\":\"wrong\"}`. Expect status `409`, `code` `impact_approval_re"
+    },
+    {
+      "id": "J9.10",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "77475e97d060dc9d",
+      "summary": "As the member, run `curl -s -b m.jar \"<API_BASE>/api/flow-studio/catalogs/data-fields?object=users\"`. Expect status 200 and no field whose name contains `passwo"
+    },
+    {
+      "id": "J9.11",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a4f61fab63e9712e",
+      "summary": "Run the same with `object=nope_table`. Expect status `404` and the error `There is no data object called \"nope_table\". Pick one from the list of objects.`"
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "40a99d45b366cab5",
+      "summary": "MEMBER WINDOW at 390px wide: open the studio, open **Seed Shop Orders**, tap **Future state**, tap `Step: Pick and pack`. Expect the Inspector below the lists, "
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9f94e2ee41a42be5",
+      "summary": "In the **Add…** list under **Actors (roles or profiles)** choose **Reviewer**. Expect the line `Reviewer`; its **Remove** button is at least 44px tall; tap it a"
+    },
+    {
+      "id": "J10.3",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9c7526168d5d6536",
+      "summary": "Tap the connector `→ Pick and pack (Yes)`. Expect the group **Branch condition** and no sideways scroll."
+    },
+    {
+      "id": "J10.4",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "29872775af9f40bb",
+      "summary": "Tap **Journey**. Expect the preview, and the **Experience map** table scrolling inside its own box, not the page."
+    },
+    {
+      "id": "J10.5",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9f650d4ee83946eb",
+      "summary": "Expect every button, list and text box in the studio to be at least 44px tall (tick boxes aside)."
+    },
+    {
+      "id": "J10.6",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1eeb54f13b877f39",
+      "summary": "Tap **← All flows**. Expect no **Settings** tab for the member."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "249914f71690fb5f",
+      "summary": "MEMBER WINDOW: create a blank flow **Pilot Check**. In **Future state** add **Add Start / End** (Label **Begin**), **Add Decision** (Label **Pass?**), **Add Ste"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3a55754a4bab3f6c",
+      "summary": "Tap `Decision: Pass?`, set **Gate key** to `Bad Key`, **Save draft**, **Preview saved draft**. Expect `The Gate key \"Bad Key\" on \"Pass?\" is not allowed. Use low"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "84ea1121abf22d7a",
+      "summary": "Set **Gate key** to `pass_check`. Tap the connector `→ Approve`, in **Condition: data object** choose `career_jobs (15)`, in **Condition: field** choose `title "
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "112f6b7a874d57c4",
+      "summary": "Click **Clear condition**, **Save draft**, **Preview saved draft**. Expect the pill `2 warning(s)` (not blocked), the warnings `The gate \"Pass?\" has no steps le"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e7835fdeae67ad5e",
+      "summary": "A Render Bindings check: MEMBER WINDOW **Journeys → Render Bindings → Renderings** lists only **Workshop board** (the internal journey experience rendering is n"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "6d63fbbc4eddfa5d"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Structured bindings on a step",
+      "kind": "journey",
+      "hash": "1586e8fb6c1462aa"
+    },
+    {
+      "title": "Journey 2 — Decision branch conditions",
+      "kind": "journey",
+      "hash": "f17f1fac64b946c1"
+    },
+    {
+      "title": "Journey 3 — Experience mapping on a step",
+      "kind": "journey",
+      "hash": "bf02eed7fd548fe7"
+    },
+    {
+      "title": "Journey 4 — Preview the generated journey, fix, publish",
+      "kind": "journey",
+      "hash": "d3ec4ec6761f31af"
+    },
+    {
+      "title": "Journey 5 — An administrator activates the journey (impact, one approval, history)",
+      "kind": "journey",
+      "hash": "ae4f2d5d6f2364f8"
+    },
+    {
+      "title": "Journey 6 — The member runs the journey",
+      "kind": "journey",
+      "hash": "053a293b0857ef76"
+    },
+    {
+      "title": "Journey 7 — Change, publish, and see who is affected before activating",
+      "kind": "journey",
+      "hash": "f62f014c22929376"
+    },
+    {
+      "title": "Journey 8 — Settings: experience channels and option lists",
+      "kind": "journey",
+      "hash": "035b78f7f2060925"
+    },
+    {
+      "title": "Journey 9 — The same capabilities by API and MCP",
+      "kind": "journey",
+      "hash": "208fdc5fbd45513a"
+    },
+    {
+      "title": "Journey 10 — On a phone",
+      "kind": "journey",
+      "hash": "26e68ac7ca5606f4"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

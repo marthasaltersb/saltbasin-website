@@ -5,6 +5,7 @@ import { Router } from 'express';
 import { requireUser } from '../auth.js';
 import { assertReadyToFinalize, sendFinalizationError, FinalizationBlockedError } from '../lib/finalizationGates.js';
 import * as FS from '../lib/flowStudio.js';
+import * as FJ from '../lib/flowJourney.js';
 
 const router = Router();
 router.use(requireUser);
@@ -17,6 +18,26 @@ const sendFile = (res, f) => { res.set({ 'Content-Type': `${f.contentType}; char
 router.get('/definition', wrap(async (req, res) => res.json(await FS.getDefinition())));
 router.put('/definition', wrap(async (req, res) => res.json(await FS.saveDefinition(req.user, req.body?.definition, { note: req.body?.note, approved: req.body?.approved }))));
 router.delete('/definition', wrap(async (req, res) => res.json(await FS.resetDefinition(req.user, { note: req.body?.note }))));
+
+// Journey flow -> experience mapping (docs/changes/journey-flow-experience-mapping.md): catalogs for the structured pickers,
+// the experience channels (render-bindings machinery), the generated-journey preview, activation and a test run.
+router.get('/catalogs', wrap(async (req, res) => res.json(await FJ.bindingCatalogs())));
+router.get('/catalogs/data-objects', wrap(async (req, res) => res.json(await FJ.dataObjects({ q: req.query.q }))));
+router.get('/catalogs/data-fields', wrap(async (req, res) => res.json(await FJ.dataFieldsOf(req.query.object))));
+router.get('/experience-channels', wrap(async (req, res) => res.json(await FJ.experienceChannels())));
+router.put('/experience-channels', wrap(async (req, res) => res.json(await FJ.saveExperienceChannels(req.user, req.body || {}))));
+router.get('/flows/:id/journey-preview', wrap(async (req, res) => res.json(await FJ.previewJourney(req.user, req.params.id, { source: req.query.source || 'published' }))));
+router.get('/flows/:id/journey', wrap(async (req, res) => res.json(await FJ.activeJourney(req.user, req.params.id))));
+router.post('/flows/:id/journey/activate', async (req, res) => {
+  try {
+    await assertReadyToFinalize(req.user.id);
+    res.json(await FJ.activateJourney(req.user, req.params.id, { approved: req.body?.approved, note: req.body?.note }));
+  } catch (e) {
+    if (e instanceof FinalizationBlockedError) return sendFinalizationError(res, e);
+    return fail(res, e);
+  }
+});
+router.post('/flows/:id/journey/test-run', wrap(async (req, res) => res.status(201).json(await FJ.startTestJourney(req.user, req.params.id))));
 
 router.get('/flows', wrap(async (req, res) => res.json(await FS.listFlows(req.user))));
 router.post('/flows', wrap(async (req, res) => res.status(201).json(await FS.createFlow(req.user, { ...req.body, sourceAction: src(req, 'create') }))));

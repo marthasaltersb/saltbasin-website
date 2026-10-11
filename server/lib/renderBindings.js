@@ -389,6 +389,7 @@ function assertCanView(rendering, user) {
 export async function listRenderings(user) {
   const out = [];
   for (const r of Reg.RENDERINGS) {
+    if (r.internal) continue;
     if (!r.viewRoles.includes(roleOf(user))) continue;
     out.push({ key: r.key, label: r.label, description: r.description, subjectNoun: r.subjectNoun, canAddSubjects: r.key === 'member-board', channels: r.channels });
   }
