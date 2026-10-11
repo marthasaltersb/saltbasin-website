@@ -1,0 +1,43 @@
+{
+  "id": "A3",
+  "feature": "proficiency-live-qr",
+  "fromBaseline": 3,
+  "proposedBy": "triage:proficiency-live-qr:r8",
+  "round": 8,
+  "triageItems": ["proficiency-live-qr-T8-1"],
+  "reason": "J6.5 (Cancel in the finalization dialog) needs an uncategorised tool, but J6.4 categorises the only one. Run in literal order, the repeat with another uncategorised tool adds a tool after approval, which changes the live QR page that J7.1 and J7.2 count. The product is right; the step's position is wrong. Reviewer decision differs from the proposal: the proposal only reworded J6.5 and moved the repeat to J8.5, which would leave J6.5 with no uncategorised tool and unreachable in order. So the whole cancel check moves into one self-contained step, J8.5, and J6.5 is retired as its duplicate.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J8.5",
+      "before": null,
+      "after": "Add a fictional tool with no category (Career Master → Manual Intake → Tools, name Fiscalis TMS). Then open My Resume → Resume Output History, click Approve for QR on any output and, in the dialog \"Set how each technology was used\", click Cancel. Expect toast \"Finalization cancelled — technologies still need a proficiency category.\", the dialog closed, and the output unchanged (no approval, no new QR link). Runs after Journey 7 on purpose.",
+      "tracesTo": "docs/changes/proficiency-rules-and-live-qr.md (finalization gate; live QR page reports changes since approval); round-8 validator observation that the Cancel check passed when run after Journey 8",
+      "whyNeeded": "Gives the Cancel check its own uncategorised tool and a fixed place after the QR-page journeys, so a literal run is deterministic and does not disturb J7.1/J7.2."
+    },
+    {
+      "op": "retire",
+      "stepId": "J6.5",
+      "before": "Click **Cancel** instead (repeat with another uncategorised tool) — expect toast \"Finalization cancelled — technologies still need a proficiency category.\" and the output unchanged.",
+      "after": null,
+      "tracesTo": "Duplicate of new step J8.5, which tests the same Cancel action with the same toast and the same unchanged-output result",
+      "whyNeeded": "Left in place it is unreachable in order (no uncategorised tool remains after J6.4) or breaks J7.1/J7.2 if a tool is added; J8.5 carries the identical expectation."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:proficiency-live-qr:r8",
+    "checklist": {
+      "Traced": "pass: both changes name the change-spec requirement and the round-8 observation",
+      "Not weaker": "pass: J8.5 keeps the exact toast and unchanged-output expectation of J6.5 and adds the dialog closing and no new QR link",
+      "Retire only duplicates": "pass: J6.5 is retired only because J8.5 tests the same thing (Cancel in the finalization dialog, same toast, output unchanged)",
+      "Exact": "pass: names the fictional tool, the screens, the button and the exact toast text",
+      "Reachable": "pass: Manual Intake and Resume Output History are walkable at desktop and 390px, as for J6.3",
+      "Deterministic": "pass: the step creates its own uncategorised tool and states its place after Journey 7, so no leftovers or earlier failures matter",
+      "Fictional data only": "pass: Fiscalis TMS is a fictional tool",
+      "Independent of the fix": "pass: tests the visible dialog, toast and unchanged output"
+    },
+    "note": "Approved with a different shape than proposed, because a reworded J6.5 alone cannot be walked in order. Spec ordering error, not a product defect. Exact baseline diff: J8.5 added, J6.5 retired.",
+    "at": "2026-10-11T03:00:00Z"
+  }
+}

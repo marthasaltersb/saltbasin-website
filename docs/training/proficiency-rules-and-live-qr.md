@@ -77,7 +77,6 @@ Methodology reminder (shown on screen): points = years × 1 (max 15) + engagemen
    - Expect a dialog "**Set how each technology was used**" listing QuoteFlow CPQ with a dropdown preset to a value marked "(suggested)".
 4. [J6.4] Choose **Hands-on**, click **Save to Career Master and continue**.
    - Expect the dialog to close, the approval to complete (for Approve for QR: toast "Approved - private QR link created…", a QR code and link under the output), and the banner gone.
-5. [J6.5] Click **Cancel** instead (repeat with another uncategorised tool) — expect toast "Finalization cancelled — technologies still need a proficiency category." and the output unchanged.
 
 ## Journey 7 — The live QR page
 
@@ -99,6 +98,8 @@ Methodology reminder (shown on screen): points = years × 1 (max 15) + engagemen
 3. [J8.3] On the Infographics tab make sure the Proficiency chart is in the template (add it if it is not), then override one level by hand (as Journey 3, step 1-2); the preview shows proficiency only when that chart is present.
    - Expect the Infographics tab thumbnails and the preview on the right to refresh with the new level.
 4. [J8.4] At 390px wide, expect the tab row to wrap and **Rules & why** to stay reachable, and the whole editor (presets, Preset Info, tab content, preview) to stack in a single column that fits the screen: no sideways panning inside the page or its scroller to read the Rules & why panel.
+5. [J8.5] Add a fictional tool with no category (Career Master → Manual Intake → Tools, name Fiscalis TMS). Then open **My Resume → Resume Output History**, click **Approve for QR** on any output and, in the dialog "**Set how each technology was used**", click **Cancel**.
+   - Expect toast "Finalization cancelled — technologies still need a proficiency category.", the dialog closed, and the output unchanged (no approval, no new QR link). This runs after Journey 7 on purpose: adding a tool after approval changes what the live QR page counts in J7.1 and J7.2.
 
 ## Edge cases
 
