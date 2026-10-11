@@ -45,6 +45,9 @@ definitions, render bindings, versioned definitions) before anything new is crea
   persistent chord identity. The table name is a legacy name and is never renamed; say "Staff" in theory
   screens, docs and code comments, and never write theory logic that treats a `journey_data_rods` row as a
   chord.
+- **A Rod lives on exactly one Staff.** Decided by Betsy 2026-10-10: combining Notes from several Staffs
+  creates a new Score whose chords sit on one new Staff; source Staffs are untouched and Notes are
+  referenced, never copied.
 - **Calculations are reproducible.** Every result records inputs, rule versions, method, temporal context,
   output, validation status and timestamp — reuse `metric_definitions` / `metric_calculations` rather than a
   parallel result store. Weights normalize only across eligible requirements; removing requirements never
