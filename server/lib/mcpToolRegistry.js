@@ -858,6 +858,25 @@ const CORE_TOOLS = [
       return { viewer, state: await getState({ releaseKey: args.release ? String(args.release) : null }) };
     },
   },
+  {
+    name: 'release_tracker_world_object',
+    title: 'Open one object of the release World',
+    description: 'One object of the release tracker World as data: the objects the World highlights as related to it (its bugs, rounds and agents, features it depends on or shares bugs with), its journey rows, and what changed since a chosen historic point. Object is a trail token: feature:<key>, bug:<id>, agent:<id>, round:<key>:<n> or scope:planned|added|backlog. Administrators, and members granted on the tracker Settings tab.',
+    inputSchema: schema({
+      object: str('The object token, for example feature:tide-table or bug:tide-table-F1-1.', { maxLength: 300 }),
+      at: str('A history point number (Historic), or "current" / omitted for the current state.', { maxLength: 12 }),
+      release: str('Optional release key; omit for the current release.', { maxLength: 120 }),
+    }, ['object']),
+    scope: 'release.read',
+    permission: 'user',
+    api: 'GET /api/release-tracker/world/object',
+    handler: async (args, { user }) => {
+      const { getWorldObject, viewerKindForUser } = await import('./releaseTrackerService.js');
+      const viewer = await viewerKindForUser(user);
+      if (!viewer) { const e = new Error('You do not have access to the release tracker. Ask an admin to add your email on its Settings tab.'); e.status = 403; e.code = 'tracker_access_denied'; throw e; }
+      return getWorldObject({ releaseKey: args.release ? String(args.release) : null, object: args.object, at: args.at ?? null });
+    },
+  },
   riTool('release_create', 'Create a release record', 'Creates a release record. Same body as POST /api/release-intelligence/releases.',
     schema({ release: rlObj('The release fields the Release Intelligence screen sends.') }, ['release']), RI, 'POST /api/release-intelligence/releases',
     async (args, { user }) => (await riLib()).createRelease(args.release || {}, rlActor(user))),

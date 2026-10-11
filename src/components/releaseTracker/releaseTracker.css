@@ -199,3 +199,4 @@ a.rt-spark:hover, a.rt-spark:focus-visible { border-color: var(--rt-teal); }
 /* World: the shared engine (src/lib/trackerWorld) draws everything inside .rt-world; its own styles are injected as #tw-style. */
 .rt-world { display: block; }
 html[data-rt-view="world"] .rt-wrap { max-width: none; padding-inline: 12px; }
+html[data-rt-view="world"] .rt-head > div:first-child .rt-muted { display: none; }

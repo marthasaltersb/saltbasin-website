@@ -13,6 +13,7 @@
     "cover_letter_agent_turn",
     "release_tracker_read",
     "release_tracker_get_state",
+    "release_tracker_world_object",
     "resume_rollups_read",
     "resume_rollup_preview",
     "career_atom_rollups_read",

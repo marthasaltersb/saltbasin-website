@@ -102,9 +102,9 @@ export function buildWorldModel({ snap, hist, at, bind, statusText, fmtT }) {
   const nodes = feats.map((f) => {
     const h = pt?.f?.[f.key];
     const absent = !!pt && !h;
-    const status = h ? h[0] : f.status;
-    const total = h ? h[3] : f.lastResult?.stepsTotal;
-    const passed = h ? h[2] : f.lastResult?.stepsPassed;
+    const status = h ? h[0] : (absent ? null : f.status);
+    const total = h ? h[3] : (absent ? null : f.lastResult?.stepsTotal);
+    const passed = h ? h[2] : (absent ? null : f.lastResult?.stepsPassed);
     const hctx = { hist: h || null, maxSteps };
     const ownBugs = (snap.bugs || []).filter((b) => b.feature === f.key && b.status !== 'seen_in_test');
     // satellites
@@ -114,7 +114,7 @@ export function buildWorldModel({ snap, hist, at, bind, statusText, fmtT }) {
         const n = idx === 4 ? h[4] - h[7] : h[idx];
         for (let i = 0; i < Math.min(n, 8); i += 1) sats.push({ id: `${f.key}|count|${cat}|${i}`, kind: 'count', label: CATS[cat - 1], short: CATS[cat - 1], tone: `s${cat}`, cat, token: twTok('feature', f.key), feature: f.key });
       });
-    } else {
+    } else if (!absent) {
       ownBugs.forEach((b) => {
         const cat = bugCat(b.status);
         const color = val('satellite.colour', b, hctx, () => `--rt-s${cat}`);
@@ -122,18 +122,18 @@ export function buildWorldModel({ snap, hist, at, bind, statusText, fmtT }) {
         sats.push({ id: twTok('bug', b.id), kind: 'bug', label: `${b.id}: ${b.step || ''}`, short: b.id, tone: color ? tokenVarName(color) : 'muted', cat, pending: !!ghost, token: twTok('bug', b.id), feature: f.key, status: b.status });
       });
     }
-    const maxRound = h ? h[1] : null;
+    const maxRound = h ? (h[1] || 0) : null;   // a point that records no round has none yet
     const rounds = absent ? [] : roundsOf(snap, hist, f, maxRound);
     rounds.forEach((r) => sats.push({ id: twTok('round', f.key, r.n), kind: 'round', label: `Round ${r.n}${r.total ? `: ${r.passed}/${r.total} steps` : r.running ? ': being tested now' : ': score not recorded'}`, short: `R${r.n}${r.total ? ` ${r.passed}/${r.total}` : ''}`, tone: r.ok == null ? 'muted' : r.ok ? 'good' : 'bad', token: twTok('round', f.key, r.n), feature: f.key, round: r.n }));
     let agentsMore = 0; let agentsAll = 0;
-    if (!h) {
+    if (!h && !absent) {
       const ag = (snap.agents || []).filter((a) => a.feature === f.key);
       agentsAll = ag.length;
       const ordered = [...ag].sort((a, b) => (b.status === 'running') - (a.status === 'running') || String(b.startedAt || '').localeCompare(String(a.startedAt || '')));
       ordered.slice(0, 4).forEach((a) => sats.push({ id: twTok('agent', a.id), kind: 'agent', label: `${ROLE_LABEL[a.role] || a.role || 'Agent'}${a.round ? ` · round ${a.round}` : ''}: ${statusText(a.status)}`, short: `${ROLE_LABEL[a.role] || a.role || 'Agent'}${a.round ? ` r${a.round}` : ''}`, tone: agentTone(a.status), token: twTok('agent', a.id), feature: f.key, status: a.status }));
       agentsMore = Math.max(0, ag.length - 4);
     }
-    const active = !!val('crystal.river', f, hctx, () => (snap.agents || []).some((a) => a.feature === f.key && a.status === 'running')) && !h;
+    const active = !!val('crystal.river', f, hctx, () => (snap.agents || []).some((a) => a.feature === f.key && a.status === 'running')) && !h && !absent;
     const colour = val('crystal.colour', f, hctx, () => `--rt-${toneOfStatus(status)}`);
     const weightRaw = val('crystal.size', f, hctx, () => (total ? 0.35 + 0.65 * (total / maxSteps) : 0.3));
     const ring = val('crystal.ring', f, hctx, () => (total ? passed / total : null));
@@ -153,9 +153,9 @@ export function buildWorldModel({ snap, hist, at, bind, statusText, fmtT }) {
     }
     return {
       id: twTok('feature', f.key), kind: 'feature', key: f.key, label: f.key,
-      status, statusLabel: statusText(status), tone: colour ? tokenVarName(colour) : 'muted',
+      status, statusLabel: absent ? 'Not tracked yet' : statusText(status), tone: absent ? 'muted' : (colour ? tokenVarName(colour) : 'muted'),
       district: districtOf(f, hasScopes), absent,
-      scoreText: total ? `${passed}/${total} steps` : 'not tested yet', pct: total ? Math.round((passed / total) * 100) : null,
+      scoreText: absent ? 'not tracked yet' : (total ? `${passed}/${total} steps` : 'not tested yet'), pct: total ? Math.round((passed / total) * 100) : null,
       weight: typeof weightRaw === 'number' ? weightRaw : 0.3, progress: typeof ring === 'number' ? ring : null,
       active, changed, sats, agentsMore, agentsAll,
       counts: { bugs: sats.filter((s) => s.kind === 'bug' || s.kind === 'count').length, rounds: rounds.length },
@@ -260,6 +260,48 @@ export function defaultHistoricIndex(hist, pointIndexAt) {
   return prev == null ? 0 : prev;
 }
 
+// ── The same selection, highlights and journey as plain data (no DOM): the API route and the MCP tool call this, so the
+// website, the API and an agent all get the same related objects and journey rows for the same object and moment.
+// object: a trail token ("feature:<key>", "bug:<id>", "agent:<id>", "round:<key>:<n>", "scope:<planned|added|backlog>").
+// at: a history point index, or null for the current state.
+export function worldObjectData({ snap, hist, object, at = null }) {
+  const live = !hist || at == null || at >= hist.points.length - 1;
+  const idx = live ? null : at;
+  const sel = selectionOf([object], snap);
+  if (!sel || sel.kind === 'missing' || sel.kind === 'other') return null;
+  const model = buildWorldModel({ snap, hist, at: idx, statusText: (x) => String(x || 'not started'), fmtT: (x) => String(x) });
+  const rel = relatedOf(model, snap, sel);
+  const typeOf = (id) => twSplit(id)[0];
+  const labelOf = new Map(); model.nodes.forEach((n) => { labelOf.set(n.id, n.label); n.sats.forEach((x) => { if (x.kind !== 'count') labelOf.set(x.id, x.short); }); }); model.districts.forEach((d) => labelOf.set(d.id, d.label));
+  const related = [...rel.ids].filter((id) => id !== sel.id && labelOf.has(id)).map((id) => ({ id, type: typeOf(id), label: labelOf.get(id), reason: rel.why[id] || null }));
+  const out = { object: sel.id, kind: sel.kind, mode: live ? 'current' : 'historic', at: idx, related, journey: [], changedSince: [], links: rel.links.map(([a, b]) => ({ from: a, to: b })) };
+  const f = sel.feature ? (snap.features || []).find((x) => x.key === sel.feature) : null;
+  const node = sel.feature ? model.nodes.find((n) => n.key === sel.feature) : null;
+  if (node) { out.status = node.status; out.score = node.pct == null ? null : { fraction: Math.round((node.pct / 100) * 1000) / 1000, text: node.scoreText }; out.district = node.district; out.scope = node.scope; out.added = node.added; if (node.changed) out.changedSince = node.changed.lines; }
+  if (sel.kind === 'feature' && f) {
+    const histRound = idx != null && hist ? (hist.points[idx]?.f?.[f.key]?.[1] ?? 0) : null;
+    roundsOf(snap, hist, f, null).forEach((r) => out.journey.push({ type: 'round', round: r.n, passed: r.passed, total: r.total, status: r.status, at: r.firstAt, afterChosenPoint: histRound != null && r.n > histRound }));
+    (snap.bugs || []).filter((b) => b.feature === f.key && b.status !== 'seen_in_test').forEach((b) => (b.history || []).forEach((h) => out.journey.push({ type: 'bug_event', bug: b.id, event: h.event, round: h.round || null, note: h.note || null, commit: h.commit || null, afterChosenPoint: histRound != null && (h.round || 0) > histRound })));
+    out.dependsOn = f.dependsOn || [];
+  } else if (sel.kind === 'bug') {
+    const b = (snap.bugs || []).find((x) => x.id === sel.bug);
+    const histRound = idx != null && hist ? (hist.points[idx]?.f?.[b.feature]?.[1] ?? 0) : null;
+    out.status = b.status; out.rootCause = b.rootCause || null; out.attempts = b.attempts || 0; out.maxFixAttemptsPerBug = snap.maxFixAttemptsPerBug ?? null; out.scope = b.scope || null; out.question = b.question || null;
+    (b.history || []).forEach((h) => out.journey.push({ type: 'bug_event', bug: b.id, event: h.event, round: h.round || null, note: h.note || null, commit: h.commit || null, files: h.files || [], afterChosenPoint: histRound != null && (h.round || 0) > histRound }));
+  } else if (sel.kind === 'agent') {
+    const a = (snap.agents || []).find((x) => x.id === sel.agent);
+    out.status = a.status; out.role = a.role || null; out.round = a.round ?? null; out.tokens = a.tokens || null; out.summary = a.summary || null;
+    (snap.agents || []).filter((x) => x.feature === a.feature).forEach((x) => out.journey.push({ type: 'agent', agent: x.id, role: x.role || null, round: x.round ?? null, status: x.status, startedAt: x.startedAt || null }));
+  } else if (sel.kind === 'round') {
+    out.status = null;
+    (snap.bugs || []).filter((b) => b.feature === sel.feature && (b.history || []).some((h) => h.round === sel.round)).forEach((b) => out.journey.push({ type: 'bug_event', bug: b.id, round: sel.round }));
+  } else if (sel.kind === 'scope') {
+    const d = model.districts.find((x) => x.id === sel.id); out.scopeSummary = d ? { label: d.label, total: d.total, passed: d.passed, openBugs: d.openBugs } : null;
+    (d?.members || []).forEach((id) => out.journey.push({ type: 'feature', id }));
+  }
+  return out;
+}
+
 // ── Data views (HTML strings, everything escaped) ────────────────────────────────────────────────────────────
 function pill(tone, text) { return `<span class="tw-pill" style="--c:${toneVar(tone)}">${esc(text)}</span>`; }
 function kv(rows) { return `<dl class="tw-kv">${rows.filter(Boolean).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`; }
@@ -335,7 +377,7 @@ function modeNote(ctx) {
 }
 
 function changedBlock(node, ctx) {
-  if (!ctx.at || !node?.changed) return '';
+  if (ctx.at == null || !node?.changed) return '';
   return sec('Changed since this point', `<ul class="tw-chg">${node.changed.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`, ' data-testid="tw-changed"');
 }
 
@@ -460,7 +502,7 @@ export const WORLD_CSS = `
 .tw { position: relative; border: 1px solid var(--tw-line); border-radius: 16px; overflow: hidden; background: var(--tw-panel); color: var(--tw-ink); font: 15px/1.45 var(--tw-body, system-ui, sans-serif); }
 .tw *, .tw *::before, .tw *::after { box-sizing: border-box; }
 .tw a { color: var(--tw-teal); }
-.tw-stage { position: relative; height: clamp(560px, calc(100vh - 190px), 900px); overflow: hidden; touch-action: none; outline: none; background: linear-gradient(180deg, var(--tw-waterTop) 0%, var(--tw-waterMid) 45%, var(--tw-waterDeep) 100%); }
+.tw-stage { position: relative; height: clamp(560px, calc(100vh - 230px), 900px); overflow: hidden; touch-action: none; outline: none; background: linear-gradient(180deg, var(--tw-waterTop) 0%, var(--tw-waterMid) 45%, var(--tw-waterDeep) 100%); }
 .tw-stage:focus-visible { box-shadow: inset 0 0 0 3px var(--tw-gold); }
 .tw-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
 .tw-stage canvas.tw-pointing { cursor: pointer; }
@@ -475,7 +517,7 @@ export const WORLD_CSS = `
 .tw-wl.tw-kbd { outline: 2px solid var(--tw-gold); }
 .tw-wl-sun b { font-size: 17px; }
 .tw-wl-sat { transform: translate(-50%, 8px); font-size: 11px; padding: 1px 6px; }
-.tw-wl-dist { pointer-events: auto; text-decoration: none; transform: translate(-50%, -50%); font: 600 11px var(--tw-body, system-ui, sans-serif); letter-spacing: .12em; text-transform: uppercase; color: var(--tw-ink); border: 1px solid var(--c, var(--tw-line)); background: color-mix(in srgb, var(--tw-panel) 88%, transparent); padding: 3px 10px; border-radius: 999px; min-height: 24px; }
+.tw-wl-dist { pointer-events: none; text-decoration: none; transform: translate(-50%, -50%); font: 600 11px var(--tw-body, system-ui, sans-serif); letter-spacing: .12em; text-transform: uppercase; color: var(--tw-ink); border: 1px solid var(--c, var(--tw-line)); background: color-mix(in srgb, var(--tw-panel) 88%, transparent); padding: 3px 10px; border-radius: 999px; min-height: 24px; }
 .tw-wl-dist .tw-muted { text-transform: none; letter-spacing: 0; font-weight: 500; }
 .tw-tip { position: absolute; pointer-events: none; background: var(--tw-panel); border: 1px solid var(--tw-line); border-radius: 8px; padding: 7px 10px; font-size: 13px; box-shadow: 0 8px 22px -12px rgba(0,0,0,.35); max-width: 260px; display: none; z-index: 6; }
 .tw-muted { color: var(--tw-muted); }
@@ -483,11 +525,12 @@ export const WORLD_CSS = `
 .tw-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tw-hud { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: space-between; z-index: 4; pointer-events: none; }
 .tw-hud > * { pointer-events: auto; }
-.tw-hud-l { display: grid; gap: 8px; justify-items: start; max-width: min(420px, 100%); }
+.tw-hud-l { display: grid; gap: 8px; justify-items: start; max-width: min(520px, 100%); }
 .tw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tw-chips-panel { display: none; margin-bottom: 8px; }
 .tw-chipbtn { display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--tw-line); background: color-mix(in srgb, var(--tw-panel) 90%, transparent); color: var(--tw-ink) !important; text-decoration: none; font-size: 13px; }
 .tw-chipbtn b { font-variant-numeric: tabular-nums; }
-.tw-legend { border: 1px solid var(--tw-line); border-radius: 12px; background: color-mix(in srgb, var(--tw-panel) 92%, transparent); max-width: 100%; }
+.tw-legend { width: min(360px, 100%); border: 1px solid var(--tw-line); border-radius: 12px; background: color-mix(in srgb, var(--tw-panel) 92%, transparent); max-width: 100%; }
 .tw-legend > summary { cursor: pointer; padding: 8px 12px; min-height: 44px; display: flex; align-items: center; font: 600 13px var(--tw-body, system-ui, sans-serif); list-style: none; }
 .tw-legend > summary::-webkit-details-marker { display: none; }
 .tw-legend > summary::after { content: '▾'; margin-left: 8px; color: var(--tw-muted); }
@@ -574,9 +617,16 @@ export const WORLD_CSS = `
 .tw-host:empty { display: none; }
 .tw-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 760px) {
-  .tw-stage { height: clamp(520px, calc(100vh - 150px), 820px); }
-  .tw-hud { top: 8px; left: 8px; right: 8px; }
+  .tw-stage { height: clamp(520px, calc(100svh - 70px), 820px); }
+  .tw-hud { top: 8px; left: 8px; right: 8px; flex-direction: column; flex-wrap: nowrap; gap: 6px; }
+  .tw-hud-l { order: 2; } .tw-tools { order: 1; justify-content: flex-start; }
+  .tw-hud-l > .tw-chips { display: none; }
+  .tw-chips-panel { display: flex; }
+  .tw-btn[data-act="pause"] { display: none; }
+  .tw-seg button { padding: 5px 11px; min-height: 44px; }
+  .tw-btn { padding: 6px 11px; }
   .tw-hint { display: none; }
+  .tw-wl-dist { font-size: 10px; padding: 2px 8px; min-height: 20px; }
   .tw-legend:not([open]) { max-width: 150px; }
   .tw-drawer { top: auto; left: 8px; right: 8px; bottom: 64px; width: auto; max-height: 56%; border-radius: 16px 16px 12px 12px; }
   .tw-drawer[data-collapsed="true"] .tw-db { display: none; }
@@ -607,7 +657,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
   const cv = (t) => host.cssVar(t) || '#888888';
   const col = (t) => new THREE.Color(cv(t));
   let reduce = !!host.reducedMotion; let paused = false;
-  const S = { snap: null, hist: null, path: [], now: Date.now(), at: null, lastHistoric: null, model: null, sel: null, rel: { ids: new Set(), why: {}, links: [], active: false }, kbd: -1, collapsed: false, hostOverview: false, viewKey: '' };
+  const S = { snap: null, hist: null, path: [], now: Date.now(), at: null, lastHistoric: null, model: null, sel: null, rel: { ids: new Set(), why: {}, links: [], active: false }, kbd: -1, collapsed: false, hostOverview: false, viewKey: '', screenPts: [] };
 
   root.innerHTML = `<div class="tw" data-tw="1">
     <div class="tw-stage" tabindex="0" role="application" aria-label="Release world. Use the arrow keys to move between objects, Enter to open one, Escape to go back. Every object is also in the Objects list.">
@@ -639,14 +689,14 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 400);
   geo.addCrystalLights(scene, THREE);
-  const sun = new THREE.Group(); geo.signature(sun, THREE);
+  const sun = new THREE.Group(); (geo.signature || geo.CRYSTAL_VARIANTS.signature)(sun, THREE);
   sun.userData = { kind: 'sun', id: 'sun' }; sun.children.forEach((m) => { m.userData = sun.userData; });
   scene.add(sun);
   const env = geo.buildEnvironment(host.environment || 'underwater', scene, THREE, { palette: { waterMid: col('waterMid'), sand: col('sand') }, keepClear: 80 });
   if (scene.fog && scene.fog.density) scene.fog.density = Math.min(scene.fog.density, 0.009);   // a wider world needs thinner water
   const clock = new THREE.Clock();
-  const cam = { theta: 0.6, phi: 0.92, dist: 30, target: new THREE.Vector3(), want: { dist: 30, target: new THREE.Vector3() }, shiftX: 0, shiftY: 0, wantShiftX: 0, wantShiftY: 0 };
-  let objs = {}; let rings = []; let rivers = []; let linkLines = []; const pickables = []; let graphSig = ''; let outerR = 20;
+  const cam = { theta: 0.6, phi: 0.78, dist: 30, target: new THREE.Vector3(), want: { dist: 30, target: new THREE.Vector3() }, shiftX: 0, shiftY: 0, wantShiftX: 0, wantShiftY: 0 };
+  let districtAngles = []; let objs = {}; let rings = []; let rivers = []; let linkLines = []; const pickables = []; let graphSig = ''; let outerR = 20;
   let drag = null; let pinch = null; const pointers = new Map(); let disposed = false; let raf = 0; let lastPublish = 0; let selRing = null;
   const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2(); const v3 = new THREE.Vector3();
   const disposeObj = (o) => o.traverse((x) => { x.geometry?.dispose?.(); (Array.isArray(x.material) ? x.material : [x.material]).forEach((m) => m?.dispose?.()); });
@@ -661,7 +711,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
 
   function layoutRadii(model) {
     const radii = []; let prev = 0;
-    model.districts.forEach((d, i) => { const r = Math.max(i === 0 ? 8 : prev + 5.5, d.total * 0.62, 5); radii.push(r); prev = r; });
+    model.districts.forEach((d, i) => { const r = Math.max(i === 0 ? 6.5 : prev + 5, d.total * 0.9, 5); radii.push(r); prev = r; });
     return radii;
   }
 
@@ -679,13 +729,20 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
       const hit = new THREE.Mesh(new THREE.TorusGeometry(r, 0.45, 6, 96), new THREE.MeshBasicMaterial({ visible: false })); hit.rotation.x = Math.PI / 2; hit.userData = { kind: 'district', id: d.id, district: d }; g.add(hit); pickables.push(hit);
       g.position.y = -1.0; scene.add(g); rings.push(g); g.userData.radius = r; g.userData.districtId = d.id;
     });
+    // A district's name pill sits where its ring has the widest gap between crystals, so it never covers one.
+    districtAngles = model.districts.map((d, i) => {
+      const n = Math.max(1, d.members.length); const ang = d.members.map((_, j) => (j / n) * Math.PI * 2 + i * 0.55);
+      let best = 0; let bs = -1;
+      for (let k = 0; k < 48; k += 1) { const a = (k / 48) * Math.PI * 2; const m = ang.length ? Math.min(...ang.map((x) => { const dd = Math.abs(((a - x + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI); return dd; })) : 9; if (m > bs + 1e-6) { bs = m; best = a; } }
+      return best;
+    });
     const posByTok = {};
     model.nodes.forEach((node) => {
       const di = Math.max(0, model.districts.findIndex((d) => d.key === node.district)); const d = model.districts[di];
       const j = d.members.indexOf(node.id); const n = Math.max(1, d.members.length);
       const a = (j / n) * Math.PI * 2 + di * 0.55; const R = radii[di];
       const group = new THREE.Group(); group.position.set(Math.cos(a) * R, Math.sin(a * 2) * 0.4, Math.sin(a) * R);
-      const size = 0.34 + node.weight * 0.5; const tc = col(node.tone);
+      const size = 0.55 + node.weight * 0.7; const tc = col(node.tone);
       const gem = geo.buildGemMesh(THREE, { color: tc, size, metalness: 0.15, roughness: 0.45 });
       gem.material.emissive = tc.clone(); gem.material.emissiveIntensity = 0.45; gem.material.transparent = true;
       gem.userData = { kind: 'feature', id: node.id, node }; pickables.push(gem); group.add(gem);
@@ -701,13 +758,13 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
         mesh.position.copy(pos); mesh.userData = { kind: s.kind, id: s.id, sat: s, node };
         if (mesh.material) { mesh.material.transparent = true; }
         if (s.pending) { mesh.material.opacity = 0.35; mesh.material.depthWrite = false; mesh.userData.ghost = true; const dash = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), new THREE.LineDashedMaterial({ color: 0xC4843A, dashSize: 0.03, gapSize: 0.02, transparent: true })); dash.computeLineDistances(); mesh.add(dash); }
-        const hit = new THREE.Mesh(new THREE.SphereGeometry(0.34, 6, 6), new THREE.MeshBasicMaterial({ visible: false })); hit.userData = mesh.userData; mesh.add(hit); pickables.push(hit);
+        const hit = new THREE.Mesh(new THREE.SphereGeometry(0.42, 6, 6), new THREE.MeshBasicMaterial({ visible: false })); hit.userData = mesh.userData; mesh.add(hit); pickables.push(hit);
         pickables.push(mesh); sats.add(mesh); satMeshes[s.id] = satMeshes[s.id] || mesh;
       };
       const stdMat = (c) => new THREE.MeshStandardMaterial({ color: c, emissive: c.clone(), emissiveIntensity: 0.4, flatShading: true, roughness: 0.45, transparent: true });
-      bugs.forEach((s, k) => { const sc = col(s.tone); const m = geo.buildGemMesh(THREE, { color: sc, size: 0.12, metalness: 0.1, roughness: 0.45 }); m.material.emissive = sc.clone(); m.material.emissiveIntensity = 0.4; const ang = (k / Math.max(1, bugs.length)) * Math.PI * 2; const rr = ringR + 0.9 + (k % 3) * 0.3; mkSat(s, m, new THREE.Vector3(Math.cos(ang) * rr, ((k % 5) - 2) * 0.16, Math.sin(ang) * rr)); });
-      rounds.forEach((s, k) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.17, 0.17), stdMat(col(s.tone))); const ang = (k / Math.max(1, rounds.length)) * Math.PI * 2 + 0.4; m.rotation.set(0.4, 0.6, 0); mkSat(s, m, new THREE.Vector3(Math.cos(ang) * ringR, 0, Math.sin(ang) * ringR)); });
-      agents.forEach((s, k) => { const m = new THREE.Mesh(new THREE.TetrahedronGeometry(0.16, 0), stdMat(col(s.tone))); const ang = (k / Math.max(1, agents.length)) * Math.PI * 2 + 1.2; mkSat(s, m, new THREE.Vector3(Math.cos(ang) * (ringR * 0.9), 1.15 + (k % 2) * 0.25, Math.sin(ang) * (ringR * 0.9))); });
+      bugs.forEach((s, k) => { const sc = col(s.tone); const m = geo.buildGemMesh(THREE, { color: sc, size: 0.17, metalness: 0.1, roughness: 0.45 }); m.material.emissive = sc.clone(); m.material.emissiveIntensity = 0.4; const ang = (k / Math.max(1, bugs.length)) * Math.PI * 2; const rr = ringR + 0.9 + (k % 3) * 0.3; mkSat(s, m, new THREE.Vector3(Math.cos(ang) * rr, ((k % 5) - 2) * 0.16, Math.sin(ang) * rr)); });
+      rounds.forEach((s, k) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.24, 0.24), stdMat(col(s.tone))); const ang = (k / Math.max(1, rounds.length)) * Math.PI * 2 + 0.4; m.rotation.set(0.4, 0.6, 0); mkSat(s, m, new THREE.Vector3(Math.cos(ang) * ringR, 0, Math.sin(ang) * ringR)); });
+      agents.forEach((s, k) => { const m = new THREE.Mesh(new THREE.TetrahedronGeometry(0.22, 0), stdMat(col(s.tone))); const ang = (k / Math.max(1, agents.length)) * Math.PI * 2 + 1.2; mkSat(s, m, new THREE.Vector3(Math.cos(ang) * (ringR * 0.9), 1.15 + (k % 2) * 0.25, Math.sin(ang) * (ringR * 0.9))); });
       group.add(sats); scene.add(group);
       objs[node.id] = { group, gem, sats, node, satMeshes, baseY: group.position.y, ringR };
       Object.keys(satMeshes).forEach((id) => { objs[id] = { satOf: node.id, mesh: satMeshes[id], sat: node.sats.find((s) => s.id === id) }; });
@@ -723,7 +780,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
     const score = `${m.root.score}${m.hasScopes ? ' (this release)' : ''}`;
     labelsEl.innerHTML = `<div class="tw-wl tw-wl-sun" data-id="sun"><b>${esc(m.root.label)}</b>${esc(m.root.sub)} · ${esc(score)}</div>`
       + m.districts.map((d) => `<a class="tw-wl tw-wl-dist" data-id="${esc(d.id)}" data-district="${esc(d.key)}" href="${esc(hrefTo('scope', d.key))}" style="--c:${toneVar(['teal', 'gold', 'muted', 'human'][m.districts.indexOf(d)] || 'muted')}">${esc(d.label)} <span class="tw-muted">${d.total ? `${d.passed}/${d.total} passed` : 'none'}</span></a>`).join('')
-      + m.nodes.map((n) => `<div class="tw-wl" data-id="${esc(n.id)}"><b><span class="tw-st" style="background:${toneVar(n.tone)}"></span>${esc(n.label)}</b><span class="tw-sub">${esc(n.statusLabel)} · ${n.pct != null ? `${esc(n.scoreText)} · ${n.pct}%` : esc(n.scoreText)}</span>${n.changed ? `<span class="tw-sub" style="color:${toneVar('gold')}">${n.changed.absent ? 'not tracked yet then' : 'changed since'}</span>` : ''}<span class="tw-sub">${n.counts.bugs} bug${n.counts.bugs === 1 ? '' : 's'} · ${n.counts.rounds} round${n.counts.rounds === 1 ? '' : 's'}${n.agentsAll ? ` · ${n.agentsAll} agent${n.agentsAll === 1 ? '' : 's'}` : ''}</span></div>`).join('')
+      + m.nodes.map((n) => `<div class="tw-wl" data-id="${esc(n.id)}"><b><span class="tw-st" style="background:${toneVar(n.tone)}"></span>${esc(n.label)}</b><span class="tw-sub">${esc(n.statusLabel)} · ${n.pct != null ? `${esc(n.scoreText)} · ${n.pct}%` : esc(n.scoreText)}</span>${n.changed ? `<span class="tw-sub" style="color:${toneVar('gold')}">${n.changed.absent ? 'not tracked yet then' : 'changed since'}</span>` : ''}</div>`).join('')
       + m.nodes.flatMap((n) => n.sats.filter((s) => s.kind !== 'count').map((s) => `<div class="tw-wl tw-wl-sat" data-id="${esc(s.id)}" data-sat="1" style="display:none"><span class="tw-st" style="background:${toneVar(s.tone)}"></span>${esc(s.short)}</div>`)).join('');
   }
 
@@ -757,7 +814,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
       const idx = S.model.districts.findIndex((d) => d.id === sel.id); const r = (layoutRadii(S.model)[idx] || 8) + 2.4;
       cam.want.target.set(0, -0.4, 0); cam.want.dist = fitDist(r);
     } else if (f) {
-      cam.want.target.copy(f.group.position); cam.want.dist = sel.kind === 'feature' ? 10 : 8.5;
+      cam.want.target.copy(f.group.position); cam.want.dist = sel.kind === 'feature' ? 14 : 12;
     } else {
       cam.want.target.set(0, -0.4, 0); cam.want.dist = fitDist(R);
     }
@@ -765,11 +822,23 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
     if (reduce || snapCam === 'cut') { cam.target.copy(cam.want.target); cam.dist = cam.want.dist; cam.shiftX = cam.wantShiftX; cam.shiftY = cam.wantShiftY; }
     updateLabelClasses();
   }
-  // Distance at which a disc of radius R (seen from the camera's tilt) fits the stage, labels included.
+  // Distance at which a disc of radius R (seen from the camera's tilt) fits the free part of the stage: the part not
+  // covered by the legend or the data view, and between the top chips and the time bar. Found by projecting the ring.
   function fitDist(R) {
-    const half = Math.tan((camera.fov * Math.PI) / 360); const asp = Math.max(0.3, camera.aspect || 1);
-    return Math.max(16, Math.max((R * (0.35 + 0.65 * Math.cos(cam.phi)) + 2) / half, R / (half * asp)) * 1.0);
+    const w = stage.clientWidth || 800; const h = stage.clientHeight || 600;
+    layoutOffsets();
+    const freeW = Math.max(160, w - Math.abs(cam.wantShiftX) * 2 - (narrowStage() ? 0 : 24)); const freeH = Math.max(200, h - (narrowStage() ? 190 : 150));
+    const limX = Math.min(0.97, freeW / w); const limY = Math.min(0.97, freeH / h);
+    const tmp = new THREE.PerspectiveCamera(camera.fov, camera.aspect || w / h, 0.1, 400); const tg = new THREE.Vector3(0, -0.4, 0); const p = new THREE.Vector3();
+    for (let d = 14; d < 110; d += 1.5) {
+      tmp.position.set(tg.x + d * Math.sin(cam.phi) * Math.cos(cam.theta), tg.y + d * Math.cos(cam.phi), tg.z + d * Math.sin(cam.phi) * Math.sin(cam.theta)); tmp.lookAt(tg); tmp.updateMatrixWorld(); tmp.updateProjectionMatrix();
+      let ok = true;
+      for (let k = 0; k < 32 && ok; k += 1) { const a = (k / 32) * Math.PI * 2; p.set(Math.cos(a) * R, 0.6, Math.sin(a) * R).project(tmp); if (Math.abs(p.x) > limX || Math.abs(p.y) > limY) ok = false; }
+      if (ok) return d;
+    }
+    return 110;
   }
+  const narrowStage = () => stage.clientWidth < 760;
   function layoutOffsets() {
     const open = !drawer.hidden; const narrow = stage.clientWidth < 760;
     const leg = root.querySelector('.tw-legend'); const legOpen = leg && leg.open && !narrow;
@@ -792,7 +861,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
   const kbdOrder = () => (S.model ? [...S.model.districts.map((d) => d.id), ...S.model.nodes.flatMap((n) => [n.id, ...n.sats.filter((s) => s.kind !== 'count').map((s) => s.id)])] : []);
 
   function placeCamera(dt) {
-    const k = reduce ? 1 : 1 - Math.exp(-(dt || 0.016) * 5);   // time-based, so a slow frame rate settles as fast as a fast one
+    const k = reduce ? 1 : 1 - Math.exp(-(dt || 0.016) * 5);   // time-based
     cam.target.lerp(cam.want.target, k); cam.dist += (cam.want.dist - cam.dist) * k; cam.shiftX += (cam.wantShiftX - cam.shiftX) * k; cam.shiftY += (cam.wantShiftY - cam.shiftY) * k;
     camera.position.set(cam.target.x + cam.dist * Math.sin(cam.phi) * Math.cos(cam.theta), cam.target.y + cam.dist * Math.cos(cam.phi), cam.target.z + cam.dist * Math.sin(cam.phi) * Math.sin(cam.theta));
     camera.lookAt(cam.target);
@@ -803,14 +872,13 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
   function frame() {
     if (disposed) return;
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(clock.getDelta(), 0.05); const t = clock.elapsedTime; const still = reduce || paused;
+    const rdt = clock.getDelta(); const dt = Math.min(rdt, 0.05); const t = clock.elapsedTime; const still = reduce || paused;
     if (!still) {
       sun.rotation.y += dt * 0.18; sun.position.y = Math.sin(t * 0.5) * 0.12;
       Object.values(objs).forEach((o, i) => { if (!o.group) return; o.gem.rotation.y += dt * 0.5; o.sats.rotation.y += dt * (0.22 + (i % 3) * 0.04); o.group.position.y = o.baseY + Math.sin(t * 0.8 + i * 1.3) * 0.15; o.group.traverse((x) => { if (x.userData?.ping) x.scale.setScalar(1 + 0.08 * Math.sin(t * 3)); }); });
       env.update(t, dt, camera); rivers.forEach((r) => geo.advanceRiverParticles(r, dt));
-      if (!drag && !pinch && !S.sel) cam.theta += dt * 0.02;
     }
-    placeCamera(dt);
+    placeCamera(Math.min(rdt, 0.4));   // the camera follows wall-clock time, so a slow device settles as fast as a quick one
     linkLines.forEach((l) => { const pos = l.line.geometry.getAttribute('position'); l.pa.getWorldPosition(v3); pos.setXYZ(0, v3.x, v3.y, v3.z); l.pb.getWorldPosition(v3); pos.setXYZ(1, v3.x, v3.y, v3.z); pos.needsUpdate = true; });
     renderer.render(scene, camera);
     positionLabels(t);
@@ -818,12 +886,12 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
 
   function positionLabels(t) {
     const w = stage.clientWidth; const h = stage.clientHeight; const narrow = w < 760; const rel = S.rel; const sel = S.sel;
-    const published = []; const radii = S.model ? layoutRadii(S.model) : [];
+    const published = []; const items = []; const radii = S.model ? layoutRadii(S.model) : [];
     labelsEl.querySelectorAll('.tw-wl').forEach((el) => {
       const id = el.dataset.id; const isSun = id === 'sun'; const isDist = !!el.dataset.district; const isSat = !!el.dataset.sat;
       let pos = null;
       if (isSun) pos = sun.position;
-      else if (isDist) { const i = S.model.districts.findIndex((d) => d.id === id); const r = radii[i] || 6; const a = cam.theta + (i - (S.model.districts.length - 1) / 2) * 0.5; v3.set(Math.cos(a) * r, -1.0, Math.sin(a) * r); pos = v3; }
+      else if (isDist) { const i = S.model.districts.findIndex((d) => d.id === id); const r = radii[i] || 6; const a = districtAngles[i] ?? 0; v3.set(Math.cos(a) * r, -1.0, Math.sin(a) * r); pos = v3; }
       else if (isSat) { const o = objs[id]; if (o?.mesh) { o.mesh.getWorldPosition(v3); pos = v3; } }
       else { const o = objs[id]; pos = o?.group?.position || null; if (o?.group) { o.group.getWorldPosition(v3); pos = v3; } }
       if (!pos) { el.style.display = 'none'; return; }
@@ -836,12 +904,28 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
       if (!isSat && !isSun && !isDist && !p) hide = true;
       el.style.display = hide ? 'none' : '';
       if (!hide) {
-        el.style.left = `${p.x}px`;
-        el.style.top = `${p.y + (isDist ? 0 : isSun ? 32 : (sel && sel.id === id) ? 40 : 16)}px`;
-        el.style.zIndex = (sel && sel.id === id) ? 3 : isDist ? 1 : 2;
+        const isSel = !!sel && sel.id === id;
+        items.push({ el, x: p.x, y: p.y + (isDist ? 0 : isSun ? -58 : isSel ? 40 : 16), isDist, isSat, prio: isDist ? 0 : isSel ? 1 : isSun ? 2 : isSat ? 4 : 3 });
+        el.style.zIndex = isSel ? 3 : isDist ? 1 : 2;
       }
       if (!isSun && !isDist && p) published.push({ id, kind: isSat ? (objs[id]?.sat?.kind || 'sat') : 'feature', x: Math.round(p.x), y: Math.round(p.y), visible: !hide });
     });
+    // De-overlap: district pills stay where they are; every other label that would cover an earlier one is moved below it.
+    const placed = [];
+    items.sort((a, b) => a.prio - b.prio).forEach((it) => {
+      const bw = it.el._w || (it.el._w = it.el.offsetWidth || 120); const bh = it.el._h || (it.el._h = it.el.offsetHeight || 34);
+      let top = it.y; const left = it.x - bw / 2; const vOff = it.isDist ? -bh / 2 : it.isSat ? 8 : 14;
+      if (!it.isDist) {
+        for (let k = 0; k < 8; k += 1) {
+          const hit = placed.find((r) => left < r.x1 && left + bw > r.x0 && top + vOff < r.y1 && top + vOff + bh > r.y0);
+          if (!hit) break;
+          const nt = hit.y1 - vOff + 2; if (nt - it.y > 44) break; top = nt;   // never drift far from its own object
+        }
+      }
+      placed.push({ x0: left, x1: left + bw, y0: top + vOff, y1: top + vOff + bh });
+      it.el.style.left = `${it.x}px`; it.el.style.top = `${top}px`;
+    });
+    S.screenPts = published;
     if (t - lastPublish > 0.25) publish(published, t);
     lastPublish = t > lastPublish + 0.25 ? t : lastPublish;
   }
@@ -855,7 +939,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
       rounds: m ? m.nodes.reduce((n, x) => n + x.sats.filter((s) => s.kind === 'round').length, 0) : 0,
       agents: m ? m.nodes.reduce((n, x) => n + x.sats.filter((s) => s.kind === 'agent').length, 0) : 0,
       rivers: rivers.length, districts: m ? m.districts.map((d) => ({ key: d.key, total: d.total })) : [],
-      focusId: S.sel?.feature ? S.sel.feature : null, selected: S.sel?.id || null, related: [...S.rel.ids], mode: S.at == null ? 'current' : 'historic', at: S.at,
+      focusId: S.sel?.feature ? S.sel.feature : null, cameraMode: S.sel && S.sel.kind === 'scope' ? 'district' : S.sel?.feature ? 'object' : 'overview', selected: S.sel?.id || null, related: [...S.rel.ids], mode: S.at == null ? 'current' : 'historic', at: S.at,
       changed: m ? m.nodes.filter((n) => n.changed).map((n) => n.key) : [], paused, reducedMotion: reduce,
     });
   }
@@ -868,7 +952,22 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
     const hits = ray.intersectObjects(pickables, false);
     const order = { bug: 0, count: 0, round: 0, agent: 0, feature: 1, sun: 2, district: 3 };
     const hit = hits.filter((h) => h.object.visible).sort((a, b) => ((order[a.object.userData.kind] ?? 4) - (order[b.object.userData.kind] ?? 4)) || a.distance - b.distance)[0];
-    return hit ? hit.object.userData : null;
+    let direct = hit ? hit.object.userData : null;
+    const isSat = !!direct && !['district', 'sun', 'feature'].includes(direct.kind);
+    // A fingertip is far wider than a satellite: while nothing is open, a touch on or near a crystal means the crystal.
+    if (isSat && e.pointerType === 'touch' && !(S.rel.active && S.rel.ids.has(direct.id))) direct = null;
+    else if (isSat) return direct;   // a small satellite under the pointer wins over its crystal
+    // Crystals are small and the camera moves: the feature crystal whose centre is nearest the pointer wins over a wider
+    // hit area, a ring or the sun. A finger gets a wider reach than a mouse.
+    const px = e.clientX - r.left; const py = e.clientY - r.top; const reach = e.pointerType === 'touch' ? 34 : 14;
+    let best = null; let bd = reach; const dOf = (id) => { const q = S.screenPts.find((z) => z.id === id); return q ? Math.hypot(q.x - px, q.y - py) : Infinity; };
+    S.screenPts.forEach((q) => { if (q.kind !== 'feature') return; const d = Math.hypot(q.x - px, q.y - py); if (d < bd) { bd = d; best = q; } });
+    if (best && objs[best.id]?.node && (!direct || direct.kind !== 'feature' || best.id === direct.id || bd + 6 < dOf(direct.id))) return objs[best.id].gem.userData;
+    if (direct && direct.kind === 'feature') return direct;
+    // A district name pill is part of the scene, not a layer above it: it takes a click only where no crystal does.
+    const pill = [...labelsEl.querySelectorAll('.tw-wl-dist')].find((el) => { if (el.style.display === 'none') return false; const q = el.getBoundingClientRect(); return e.clientX >= q.left && e.clientX <= q.right && e.clientY >= q.top && e.clientY <= q.bottom; });
+    if (pill) { const d = S.model.districts.find((x) => x.id === pill.dataset.id); if (d) return { kind: 'district', id: d.id, district: d }; }
+    return direct;
   }
   canvas.twPick = (cx, cy, detail) => {   // test hook: what is under this page point
     const u = pick({ clientX: cx, clientY: cy });
@@ -943,7 +1042,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
     const act = b.dataset.act; const st = b.dataset.state;
     if (st === 'current') setAt(null);
     else if (st === 'historic') { if (!S.hist) return; const i = S.lastHistoric ?? defaultHistoricIndex(S.hist, host.pointIndexAt); setAt(i); }
-    else if (act === 'pause') { paused = !paused; b.setAttribute('aria-pressed', String(paused)); b.textContent = paused ? 'Resume motion' : 'Pause motion'; }
+    else if (act === 'pause') { paused = !paused; b.setAttribute('aria-pressed', String(paused)); b.textContent = paused ? 'Resume motion' : 'Pause motion'; publish(S.screenPts); }
     else if (act === 'objects') { objectsEl.hidden = !objectsEl.hidden; b.setAttribute('aria-expanded', String(!objectsEl.hidden)); renderDrawer(); }
     else if (act === 'objects-close') { objectsEl.hidden = true; root.querySelector('[data-act="objects"]').setAttribute('aria-expanded', 'false'); renderDrawer(); }
     else if (act === 'back') { if (!S.path.length) { S.hostOverview = false; render(); } else back(); }
@@ -953,7 +1052,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
     else if (act === 'prev') jump(-1); else if (act === 'next') jump(1); else if (act === 'live') setAt(null);
   });
   range.addEventListener('input', () => { const last = S.hist.points.length - 1; setAt(Number(range.value) >= last ? null : Number(range.value)); });
-  objectsEl.addEventListener('click', (e) => { if (e.target.closest('a') && stage.clientWidth < 760) { objectsEl.hidden = true; root.querySelector('[data-act="objects"]').setAttribute('aria-expanded', 'false'); } });
+  objectsEl.addEventListener('click', (e) => { if (e.target.closest('a')) { objectsEl.hidden = true; root.querySelector('[data-act="objects"]').setAttribute('aria-expanded', 'false'); } });
 
   // ---- render everything from state ----
   const cache = { legend: '', chips: '', objects: '', own: '', title: '' };
@@ -966,7 +1065,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
     const hasHost = pathOpen && !html;      // a layer the host draws (stat, status updates, a round ...)
     const open = pathOpen && !(objectsEl.hidden === false && stage.clientWidth < 760);
     drawer.hidden = !open;
-    if (html !== null && html !== cache.own) { const sc = $('.tw-db').scrollTop; own.innerHTML = html; cache.own = html; $('.tw-db').scrollTop = sc; }
+    if (html !== null && html !== cache.own) { const sc = drawer.querySelector('.tw-db').scrollTop; own.innerHTML = html; cache.own = html; drawer.querySelector('.tw-db').scrollTop = sc; }
     if (html === null && cache.own !== '') { own.innerHTML = ''; cache.own = ''; }
     const title = !S.path.length && S.hostOverview ? 'Data map' : sel && sel.kind === 'round' ? 'Test round' : sel && sel.kind === 'missing' ? 'Not found' : 'Data view';
     if (title !== cache.title) { drawer.querySelector('.tw-dtitle').textContent = title; cache.title = title; }
@@ -988,8 +1087,9 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
     // chrome
     const ctx = ctxFor();
     const leg = legendHtml(S.model); if (leg !== cache.legend) { $('.tw-legend-slot').innerHTML = leg; cache.legend = leg; }
-    const chips = headlineHtml(S.snap, hrefTo); if (chips !== cache.chips) { $('.tw-chips').innerHTML = chips; cache.chips = chips; }
-    const objs2 = objectsHtml(S.model, hrefTo) + `<!--${S.path.join('/')}-->`; if (objs2 !== cache.objects) { $('.tw-objects-body').innerHTML = objs2; cache.objects = objs2; }
+    const chips = headlineHtml(S.snap, hrefTo); if (chips !== cache.chips) { $('.tw-hud .tw-chips').innerHTML = chips; cache.chips = chips; }
+    const objs2 = '<div class="tw-chips tw-chips-panel"></div>' + objectsHtml(S.model, hrefTo) + `<!--${S.path.join('/')}-->`; if (objs2 !== cache.objects) { $('.tw-objects-body').innerHTML = objs2; cache.objects = objs2; }
+    $('.tw-chips-panel').innerHTML = chips;
     objectsEl.querySelectorAll('a[data-id]').forEach((a) => a.classList.toggle('tw-ol-on', !!S.sel && a.dataset.id === S.sel.id));
     const hasHist = !!S.hist && S.hist.points.length > 1;
     bar.hidden = !hasHist;
@@ -1004,6 +1104,7 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
       asof.innerHTML = pt ? `${esc(host.fmtT(pt.t))} UTC${u ? ` · after ${esc(u.version)}` : ''}` : '<b>Live</b>';
     }
     renderDrawer(); void ctx;
+    publish(S.screenPts);   // test aids (data-world) follow every state change at once, not only the next animation frame
     stage.classList.toggle('tw-has-sel', !!S.sel);
     const vk = `${S.path.join('/')}|${S.at}|${S.hostOverview}`;
     if (host.onView && (vk !== S.viewKey || S.snap !== S.viewSnap)) { S.viewKey = vk; S.viewSnap = S.snap; host.onView({ sel: S.sel, at: S.at, path: S.path, overview: S.hostOverview && !S.path.length, slot: hostSlot, owns: !!S.sel && ['feature', 'bug', 'agent', 'scope'].includes(S.sel.kind) }); }
@@ -1024,10 +1125,12 @@ export function createTrackerWorld({ THREE, geo, root, host }) {
     update({ snap, hist, path, now }) {
       const changedPath = S.path.join('/') !== (path || []).join('/');
       if (changedPath && (path || []).length) S.hostOverview = false;
+      const legend = root.querySelector('.tw-legend');
+      if (legend && (changedPath || !S.snap)) { const wasOpen = S.path.length === 0; const willOpen = (path || []).length === 0; if (!S.snap) { if (stage.clientWidth < 760) legend.open = false; } else if (wasOpen && !willOpen) legend.open = false; else if (!wasOpen && willOpen && stage.clientWidth >= 760) legend.open = true; }
       S.snap = snap; S.hist = hist || null; S.path = path || []; S.now = now || Date.now();
       if (S.at != null && (!S.hist || S.at >= S.hist.points.length - 1)) S.at = null;
       render();
-      if (changedPath) { S.kbd = -1; const b = $('.tw-db'); if (b) b.scrollTop = 0; }
+      if (changedPath) { S.kbd = -1; const b = drawer.querySelector('.tw-db'); if (b) b.scrollTop = 0; }
     },
     setAt, getAt: () => S.at,
     refreshColors() { syncTokens(); graphSig = ''; if (S.snap) render(); },
