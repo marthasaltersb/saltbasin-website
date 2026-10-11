@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:00:16.642Z",
+  "exportedAt": "2026-10-11T01:03:23.690Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -74,7 +74,7 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 2,
       "lastScore": "20/25",
       "lastReport": "docs/test-results/release-scope/round-2.md",
@@ -1244,7 +1244,7 @@
     {
       "id": "release-scope-F1-3",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J5.5 / interface parity",
@@ -1267,7 +1267,7 @@
     {
       "id": "release-scope-F1-4",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity",
@@ -1290,7 +1290,7 @@
     {
       "id": "release-scope-F1-5",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "integrate",
@@ -1311,7 +1311,7 @@
     {
       "id": "release-scope-F1-6",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "informational",
       "attempts": 0,
       "step": "sync",
@@ -1332,7 +1332,7 @@
     {
       "id": "release-scope-F1-7",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "informational",
       "attempts": 0,
       "step": "J5.5",
@@ -1380,7 +1380,7 @@
     {
       "id": "release-scope-T2-1",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.1 no qr-gated-outputs file",
@@ -1405,7 +1405,7 @@
     {
       "id": "release-scope-T2-2",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.2 no 'Not launched' line (ambiguous)",
@@ -1430,9 +1430,9 @@
     {
       "id": "release-scope-T2-3",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J4.1 estimate note lacks '(added after the cut)'",
       "rootCause": "scripts/session-plan.mjs:45 prints a fixed note. releaseCut.js:126-129 records only outOfScope, so the CLI cannot tell whether the feature …",
       "files": [
@@ -1451,6 +1451,12 @@
           "event": "found",
           "note": "scripts/session-plan.mjs:45 prints a fixed note. releaseCut…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Estimate items for features added after the cut now carry a…",
+          "commit": "98543108315650c2a76a1749d6ae80e4d97c401d"
         }
       ]
     },
@@ -1459,7 +1465,7 @@
       "feature": "release-scope",
       "status": "backlog_pre_existing",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J5.1 MCP_GAP: snapshot paste has no MCP tool",
       "rootCause": null,
       "files": [],
@@ -1474,13 +1480,19 @@
           "event": "found",
           "note": "Parity row release-tracker-admin (capabilityParity.js:174).…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Registered 7 admin-only release_tracker_* MCP tools (ingest…",
+          "commit": "98543108315650c2a76a1749d6ae80e4d97c401d"
         }
       ]
     },
     {
       "id": "release-scope-T2-5",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J5.3 Added after the cut notes (four)",
