@@ -1,0 +1,38 @@
+{
+  "id": "A2",
+  "feature": "release-cut-and-session-plans",
+  "fromBaseline": 1,
+  "proposedBy": "triage:release-cut-and-session-plans:r1",
+  "round": 1,
+  "triageItems": [
+    "release-cut-and-session-plans-T3-OBS-alerts"
+  ],
+  "reason": "Observation: stale red alerts accumulate on Session plans and on a phone a fixed banner hides part of Close session.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J3.6",
+      "before": "",
+      "after": "After J3.4, click Record merge for S-garden-01 again; at 390px check the card. Expect the earlier red alert gone and Record merge and Close session fully visible and tappable.",
+      "tracesTo": "CLAUDE.md frontend conventions (member-readable errors, severity colours); interface parity v3 (MOBILE_GAP)",
+      "whyNeeded": "Real owner-convention and mobile-parity risk with no step covering it."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:release-cut-and-session-plans:r1",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "fail: 'the earlier red alert gone', 'only the latest message shown' and 'fully visible and tappable' are not measurable, and the step does not say which alert or what card text to expect; a second merge click changes S-garden-01's merge count and the outcome is unspecified",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "fail: 'After J3.4' sits after J3.5 and depends on leftover alert state and an unspecified second-merge result",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "pass",
+      "Errors are plain and coloured by severity: any step that checks an error or warning requires the message to state the actual problem in plain words a member understands (no developer terms such as JSON, 500, null as the main message; technical detail may follow on its own line), and the colour that fits: red for a failure or a rejected input, amber only for a caution where nothing failed (owner direction 2026-10-10).": "pass"
+    },
+    "note": "The risk is real and goes back to the fix loop as a product defect: on Session plans only the latest message may be shown, every message is cleared after a successful action, and no banner may cover Record merge or Close session on a 390px screen. The step as written is not exact or deterministic; triage may re-propose it with a fixed sequence (for example: after the J2.2-J2.5 refusals and the J2.6 success, at most one alert is in the page; at 390px each button's centre point returns the button from elementFromPoint and lies inside the viewport) and a stated result for any repeated merge.",
+    "at": "2026-10-11T00:00:00Z"
+  }
+}

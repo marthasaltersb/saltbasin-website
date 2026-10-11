@@ -1,0 +1,118 @@
+{
+  "id": "A1",
+  "feature": "release-cut-and-session-plans",
+  "fromBaseline": 1,
+  "proposedBy": "triage:release-cut-and-session-plans:r1",
+  "round": 1,
+  "triageItems": [
+    "release-cut-and-session-plans-T1-J3.1",
+    "release-cut-and-session-plans-T1-J3.4",
+    "release-cut-and-session-plans-T1-J3.5",
+    "release-cut-and-session-plans-T1-J7.8",
+    "release-cut-and-session-plans-T1-J7.9",
+    "release-cut-and-session-plans-T1-J7.11",
+    "release-cut-and-session-plans-T1-J8.6",
+    "release-cut-and-session-plans-T1-J8.7",
+    "release-cut-and-session-plans-T2-J6.6"
+  ],
+  "reason": "Eight steps froze a live feature's score at 60/60 although the platform correctly reads its newest round (59/60); J6.6 quotes a sentence since reworded by release-scope.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "P.7",
+      "before": "",
+      "after": "Score fixture read once from the worktree under test: highest round-<N>.md of in-app-release-loop gives <IARL_ROUND>, <IARL_PASSED>, <IARL_TOTAL>, <IARL_BASELINE>, <IARL_REPORT>; Met only when <IARL_TOTAL> is 60 and <IARL_PASSED> >= 60, else red Missed.",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "Defines the placeholders the changed steps use, from a committed file at the fixed code-under-test commit, so every run resolves the same values. The Journey 3 intro sentence that froze the feature at 60/60 baseline v2 is reworded to match (free text)."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.1",
+      "before": "actual 60/60 followed by a green label Met",
+      "after": "actual <IARL_PASSED>/<IARL_TOTAL> followed by Met (green) when <IARL_TOTAL> is 60 and <IARL_PASSED> is at least 60, else Missed (red)",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "in-app-release-loop is a live feature whose newest round changes (round-4 is 59/60); a literal 60/60 can never be stable, and the change spec says the platform reads the newest round. The reviewer added the total condition because the product's Met rule is passed >= expected passed AND total == expected total (server/lib/releaseCut.js sessionReport; ReleaseCutTabs.jsx)."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.4",
+      "before": "item line still reading expected 60/60 \u00b7 actual 60/60",
+      "after": "item line still reading expected 60/60 \u00b7 actual <IARL_PASSED>/<IARL_TOTAL>",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "in-app-release-loop is a live feature whose newest round changes (round-4 is 59/60); a literal 60/60 can never be stable, and the change spec says the platform reads the newest round."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.5",
+      "before": "expected 60/62 \u00b7 actual 60/60 followed by red Missed",
+      "after": "expected 60/62 \u00b7 actual <IARL_PASSED>/<IARL_TOTAL> followed by red Missed",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "in-app-release-loop is a live feature whose newest round changes (round-4 is 59/60); a literal 60/60 can never be stable, and the change spec says the platform reads the newest round."
+    },
+    {
+      "op": "change",
+      "stepId": "J7.8",
+      "before": "round 3, passed 60, total 60, baseline 2, report docs/test-results/in-app-release-loop/round-3.md",
+      "after": "round <IARL_ROUND>, passed <IARL_PASSED>, total <IARL_TOTAL>, baseline <IARL_BASELINE>, report <IARL_REPORT>",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "in-app-release-loop is a live feature whose newest round changes (round-4 is 59/60); a literal 60/60 can never be stable, and the change spec says the platform reads the newest round."
+    },
+    {
+      "op": "change",
+      "stepId": "J7.9",
+      "before": "\"actual\":\"60/60\" and \"met\":true",
+      "after": "\"actual\":\"<IARL_PASSED>/<IARL_TOTAL>\" and \"met\" true only when <IARL_TOTAL> is 60 and <IARL_PASSED> is at least 60, else false",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "in-app-release-loop is a live feature whose newest round changes (round-4 is 59/60); a literal 60/60 can never be stable, and the change spec says the platform reads the newest round. Total condition added by the reviewer to match the product's rule."
+    },
+    {
+      "op": "change",
+      "stepId": "J7.11",
+      "before": "item line expected 60/60 \u00b7 actual 60/60",
+      "after": "item line expected 60/60 \u00b7 actual <IARL_PASSED>/<IARL_TOTAL> with the matching Met (green) or Missed (red) label per P.7",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "in-app-release-loop is a live feature whose newest round changes (round-4 is 59/60); a literal 60/60 can never be stable, and the change spec says the platform reads the newest round."
+    },
+    {
+      "op": "change",
+      "stepId": "J8.6",
+      "before": "in-app-release-loop passed 60, total 60, baseline 2",
+      "after": "in-app-release-loop passed <IARL_PASSED>, total <IARL_TOTAL>, baseline <IARL_BASELINE>",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "in-app-release-loop is a live feature whose newest round changes (round-4 is 59/60); a literal 60/60 can never be stable, and the change spec says the platform reads the newest round."
+    },
+    {
+      "op": "change",
+      "stepId": "J8.7",
+      "before": "expected 60/60, actual 60/60 and met true",
+      "after": "expected 60/60, actual <IARL_PASSED>/<IARL_TOTAL> and met true only when <IARL_TOTAL> is 60 and <IARL_PASSED> is at least 60, else false",
+      "tracesTo": "docs/changes/release-cut-and-session-plans.md v1 (a merge reads each feature's newest validated round)",
+      "whyNeeded": "in-app-release-loop is a live feature whose newest round changes (round-4 is 59/60); a literal 60/60 can never be stable, and the change spec says the platform reads the newest round. Total condition added by the reviewer."
+    },
+    {
+      "op": "change",
+      "stepId": "J6.6",
+      "before": "Froze 1.0.0 at <HEAD7>: 1/2 delivered, 1 carried. Opened 1.1.0 with 1 features (1 carried, 0 new).",
+      "after": "Froze 1.0.0 at <HEAD7>: 1/2 planned delivered, 1 carried, 0 in backlog, 0 added after the cut. Opened 1.1.0 with 1 features (1 carried, 0 new).",
+      "tracesTo": "docs/changes/release-scope.md (counts planned/backlog/addedAfterCut in release-cut.mjs, owner direction 2026-10-10)",
+      "whyNeeded": "release-scope, a later owner-directed feature, owns the sentence; scripts/release-cut.mjs line 110 prints this exact text."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:release-cut-and-session-plans:r1",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass: every change names the change-spec requirement or owner direction",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass: the literal 60/60 contradicts the change spec (the platform reads the newest validated round, now 59/60); each step still compares the platform value to the value in the round file, and J6.6 adds counts. Reviewer tightened J3.1, J7.9 and J8.7 with the total==60 condition so the Met rule matches the product exactly.",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass: nothing retired",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "pass: placeholders are defined by exact rule in P.7; Met rule and sentence are exact",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass: unchanged surfaces; P.7 is a file read",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "pass: values come from a committed file at the fixed code-under-test commit, not wall-clock time or leftovers",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "pass: tests the platform against the committed round file and the shipped release-scope wording, not an implementation choice",
+      "Errors are plain and coloured by severity: any step that checks an error or warning requires the message to state the actual problem in plain words a member understands (no developer terms such as JSON, 500, null as the main message; technical detail may follow on its own line), and the colour that fits: red for a failure or a rejected input, amber only for a caution where nothing failed (owner direction 2026-10-10).": "pass: no error step changed; Missed stays red"
+    },
+    "note": "Verified against the round-1 report, docs/test-results/in-app-release-loop/round-4.md, releaseCut.js and release-cut.mjs. P.7 added because the proposals reference it. J3.1/J7.9/J8.7 tightened with the total condition.",
+    "at": "2026-10-11T00:00:00Z"
+  }
+}
