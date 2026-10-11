@@ -1,0 +1,39 @@
+{
+  "id": "A2",
+  "feature": "journey-flow-experience-mapping",
+  "fromBaseline": 1,
+  "proposedBy": "fix:journey-flow-experience-mapping:r1",
+  "round": 1,
+  "triageItems": [
+    "journey-flow-experience-mapping-B12"
+  ],
+  "reason": "Proves test runs record the starter as every actor role.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "(new step, id assigned at freeze)",
+      "before": null,
+      "after": "As the member, start a test run of an activated journey whose gates need actor roles. Expect the run to advance past those gates without assigning anyone else, and the Journey preview to state that the test-run starter is recorded as every actor role.",
+      "tracesTo": "journey-flow-experience-mapping B12",
+      "whyNeeded": "Proves the actor-role self-assignment for test runs."
+    }
+  ],
+  "review": {
+    "status": "needs_owner",
+    "reviewer": "amend:journey-flow-experience-mapping:r1",
+    "checklist": {
+      "Traced": "fail: B12 is a bug id, not a change-spec requirement or owner direction; neither says a test-run starter may stand in for every actor role",
+      "Not weaker": "fail: 'advance past those gates' contradicts the frozen J6.1, which expects the test journey to be AT gate f<ID>_stock_check after starting",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: no exact preview wording, no gate names, no counts",
+      "Reachable": "pass",
+      "Deterministic": "fail: 'advance past' is not defined (how, and to which gate) and no starting state is written",
+      "Fictional data only": "pass",
+      "Independent of the fix": "fail: it tests the fixer's self-assignment mechanism (journey_rod_actors rows with testRun) rather than a stated behaviour",
+      "Errors plain and coloured by severity": "pass"
+    },
+    "note": "Needs a business rule. Recording one person as every actor role on a test run is an authority decision (it lets a member satisfy gates that name other roles and agents), and it conflicts with J6.1 as frozen. No owner direction covers it. Nothing is approved until the owner answers.",
+    "at": "2026-10-11T03:00:02.607Z",
+    "question": "When a member starts a test journey, may the system record that member as holding every actor role the journey's gates ask for (so the test run can move past those gates alone), or must a test run stop at the first gate that needs a role the member does not hold? If it may, should the Journey preview say so in words, and with what exact wording?"
+  }
+}

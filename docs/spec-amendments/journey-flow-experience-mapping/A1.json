@@ -1,0 +1,38 @@
+{
+  "id": "A1",
+  "feature": "journey-flow-experience-mapping",
+  "fromBaseline": 1,
+  "proposedBy": "fix:journey-flow-experience-mapping:r1",
+  "round": 1,
+  "triageItems": [
+    "journey-flow-experience-mapping-B8"
+  ],
+  "reason": "Proves the Spatial Journey World stage panel shows the experience channels.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "(new step, id assigned at freeze)",
+      "before": null,
+      "after": "As the member, open the Spatial Journey World for an activated flow-generated journey, select a stage in the Deal Journey panel. Expect an 'Experience (from the journey flow)' list showing each channel's value, or 'not set' / 'not mapped' where the channel says so, and a link channel shown as a clickable link.",
+      "tracesTo": "journey-flow-experience-mapping B8 (known limitation: rendering of experience)",
+      "whyNeeded": "Proves the stage panel reads stage.experience for a member."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:journey-flow-experience-mapping:r1",
+    "checklist": {
+      "Traced": "pass (names B8; note the change spec's Known limitations say the Spatial Journey World only receives the data, and the fix agent says the world-layer and crystal-variant parts need an owner decision)",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: no URL or navigation path to the world, no fixture stage, no expected channel values or counts; 'each channel's value' is not an exact result",
+      "Reachable": "fail: no 390px walkthrough is stated and the stage panel's phone behaviour is not defined",
+      "Deterministic": "fail: which stage is opened and which channels have values depends on earlier journeys' state; no starting state is written",
+      "Fictional data only": "pass",
+      "Independent of the fix": "fail: the heading 'Experience (from the journey flow)' is the label the fixer chose; the change spec names no such label",
+      "Errors plain and coloured by severity": "pass"
+    },
+    "note": "Rejected as written, not on the merits of the behaviour. The step fails Exact, Reachable, Deterministic and Independent of the fix. The product must show the stage's experience channels (value, 'not set', 'not mapped', links as anchors) in the Spatial Journey World; that implementation stays as built. A new proposal can be filed with an exact entry path (for example the world URL), the fixture flow from J1-J8 with the stage named, the exact expected rows (using the J8.3 counts), the 390px expectation, and a label taken from the change spec rather than from the implementation. No owner question is needed for that.",
+    "at": "2026-10-11T03:00:02.607Z"
+  }
+}

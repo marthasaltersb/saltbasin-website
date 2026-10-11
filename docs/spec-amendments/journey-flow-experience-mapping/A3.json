@@ -1,0 +1,38 @@
+{
+  "id": "A3",
+  "feature": "journey-flow-experience-mapping",
+  "fromBaseline": 1,
+  "proposedBy": "fix:journey-flow-experience-mapping:r1",
+  "round": 1,
+  "triageItems": [
+    "journey-flow-experience-mapping-B13"
+  ],
+  "reason": "Proves a repeated activation is a no-op.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "(new step, id assigned at freeze)",
+      "before": null,
+      "after": "Activate a published journey twice with no change in between. Expect the second call to answer ok with 'already active' and no new flow_journey_activated event in the history.",
+      "tracesTo": "journey-flow-experience-mapping B13",
+      "whyNeeded": "Proves activation is idempotent."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:journey-flow-experience-mapping:r1",
+    "checklist": {
+      "Traced": "fail: B13 is a bug id, not a change-spec requirement; the change spec states no idempotent-activation rule",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: no surface (button, API call or MCP tool), no exact message text, no exact history expectation; the event name flow_journey_activated differs from the history row wording frozen in J5.3 ('journey activated v5')",
+      "Reachable": "fail: after activation the UI offers no stated way to activate the same version again, and no 390px walkthrough is given",
+      "Deterministic": "fail: the fixer's activation token now includes the running-journey count, so 'no change in between' depends on whether a test journey was started (J6.1) and where the step sits in the order; no position or state is written",
+      "Fictional data only": "pass",
+      "Independent of the fix": "fail: it tests the token mechanism the fixer chose",
+      "Errors plain and coloured by severity": "pass"
+    },
+    "note": "Rejected as written. The step fails Traced, Exact, Reachable, Deterministic and Independent of the fix. The product behaviour (a repeat activation of an unchanged journey writes no new history row and applies nothing) may stay as built. A new proposal needs a stated position (for example immediately after J5.2, before J6.1), a named surface such as the API call from J9.8/J9.9 with its approval value, the exact response message and field, the exact history row count in J5.3's wording, and a traced requirement or owner direction.",
+    "at": "2026-10-11T03:00:02.607Z"
+  }
+}
