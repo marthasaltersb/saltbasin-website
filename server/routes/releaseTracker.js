@@ -15,6 +15,7 @@ import {
   viewerKindForUser, shareTokenAllowed, pullFromRepo, subscribe, streamClientCount,
 } from '../lib/releaseTrackerService.js';
 import { jsonProblemMessage } from '../lib/friendlyErrors.js';
+import { showScope, setFeatureScope, addFeatureAfterCut } from '../lib/releaseScopeChange.js';
 
 const router = Router();
 const fail = (res, e) => {
@@ -162,6 +163,22 @@ router.post('/tokens', async (req, res) => {
 router.delete('/tokens/:id', wrap(async (req, res) => {
   const admin = await requireAdmin(req, res); if (!admin) return;
   res.json(await revokeToken(Number(req.params.id), admin));
+}));
+
+// ── Release scope (admin): the same functions scripts/release-scope.mjs and the MCP tools call ──
+router.get('/scope', wrap(async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
+  res.json(showScope());
+}));
+router.post('/scope', wrap(async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
+  const b = req.body || {};
+  res.json(setFeatureScope({ key: b.key, scope: b.scope, decidedBy: b.decidedBy, reason: b.reason }));
+}));
+router.post('/scope/add', wrap(async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
+  const b = req.body || {};
+  res.status(201).json(addFeatureAfterCut({ key: b.key, title: b.title, scope: b.scope, decidedBy: b.decidedBy, reason: b.reason, training: b.training, change: b.change, build: b.build }));
 }));
 
 router.get('/snapshots', wrap(async (req, res) => {

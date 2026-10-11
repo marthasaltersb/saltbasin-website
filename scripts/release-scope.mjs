@@ -9,13 +9,13 @@
 //   node scripts/release-scope.mjs set --key <feature> --scope planned|backlog --by <who> --reason "<why>"
 //        (moves an existing feature; appended to its scopeHistory, never rewritten)
 //
-// Edits docs/release-log/active-release.features.json only. A reason and a decider are required: a scope change
+// Edits docs/release-log/active-release.features.json only, through server/lib/releaseScopeChange.js (the same function the API and MCP tools call). A reason and a decider are required: a scope change
 // is an owner decision and the tracker shows it. Fictional data only (public repo).
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { SCOPES, scopeOf, isAddedAfterCut, groupByScope } from '../server/lib/releaseScope.js';
+import { scopeOf, groupByScope } from '../server/lib/releaseScope.js';
+import { setFeatureScope, addFeatureAfterCut } from '../server/lib/releaseScopeChange.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const file = path.join(root, 'docs/release-log/active-release.features.json');
@@ -24,11 +24,8 @@ const cmd = argv[0];
 const opt = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null; };
 const fail = (m) => { console.error(m); process.exit(1); };
 const defs = JSON.parse(fs.readFileSync(file, 'utf8'));
-const save = () => fs.writeFileSync(file, `${JSON.stringify(defs, null, 2)}\n`);
-const now = new Date().toISOString();
-const head = () => { try { return execFileSync('git', ['rev-parse', '--short=7', 'HEAD'], { cwd: root }).toString().trim(); } catch { return null; } };
-const need = (n, what) => { const v = opt(n); if (!v || !String(v).trim()) fail(`Give ${what} with ${n}.`); return String(v).trim(); };
-const needScope = () => { const s = need('--scope', 'the scope (planned or backlog)'); if (!SCOPES.includes(s)) fail(`The scope must be one of: ${SCOPES.join(', ')}. Got "${s}".`); return s; };
+const FLAGS = { key: '--key', scope: '--scope', by: '--by', reason: '--reason', title: '--title' };
+const run = (fn) => { try { console.log(fn().message); } catch (e) { fail(e.message); } };
 
 if (cmd === 'show') {
   const g = groupByScope(defs.features);
@@ -38,24 +35,12 @@ if (cmd === 'show') {
   console.log(`\nAdded after the cut (${g.added.length}; ${g.added.filter((f) => scopeOf(f) === 'planned').length} counted in this release's planned work):`); for (const f of g.added) console.log(`  ${f.key}  scope=${scopeOf(f)}  added ${String(f.added.at).slice(0, 10)} ${f.added.commit || ''} by ${f.added.decidedBy}: ${f.added.reason}`);
   console.log(`\nBacklog, not this release's work (${g.backlog.length}):`); for (const f of g.backlog) console.log(`  ${f.key}  [${f.kind || 'new'}]${f.blockedOn ? ` blocked on ${f.blockedOn}` : ''}`);
 } else if (cmd === 'add') {
-  const key = need('--key', 'the feature key');
-  if (defs.features.some((f) => f.key === key)) fail(`Feature "${key}" is already in release ${defs.version}. Use "set" to change its scope.`);
-  const scope = needScope(); const by = need('--by', 'who decided'); const reason = need('--reason', 'the reason');
-  defs.features.push({
-    key, title: need('--title', 'the title'),
-    trainingSpec: opt('--training') || `docs/training/${key}.md`, changeSpec: opt('--change') || `docs/changes/${key}.md`,
-    build: opt('--build') || null, dependsOn: [], kind: 'new', scope,
-    added: { at: now, commit: head(), decidedBy: by, reason },
-    scopeHistory: [{ at: now, from: null, to: scope, decidedBy: by, reason }],
-  });
-  save(); console.log(`Added ${key} to release ${defs.version} after the cut, scope ${scope}.`);
+  run(() => addFeatureAfterCut({
+    key: opt('--key'), title: opt('--title'), scope: opt('--scope'), decidedBy: opt('--by'), reason: opt('--reason'),
+    training: opt('--training'), change: opt('--change'), build: opt('--build'),
+  }, FLAGS));
 } else if (cmd === 'set') {
-  const key = need('--key', 'the feature key');
-  const f = defs.features.find((x) => x.key === key); if (!f) fail(`Feature "${key}" is not in release ${defs.version}. Use "add" for a new feature.`);
-  const scope = needScope(); const by = need('--by', 'who decided'); const reason = need('--reason', 'the reason');
-  const from = scopeOf(f); if (from === scope) fail(`${key} is already ${scope}; nothing changed.`);
-  f.scope = scope; f.scopeHistory = [...(f.scopeHistory || []), { at: now, from, to: scope, decidedBy: by, reason }];
-  save(); console.log(`${key}: ${from} -> ${scope}${isAddedAfterCut(f) ? ' (added after the cut)' : ''}.`);
+  run(() => setFeatureScope({ key: opt('--key'), scope: opt('--scope'), decidedBy: opt('--by'), reason: opt('--reason') }, FLAGS));
 } else {
   fail('usage: release-scope.mjs show|add|set (see the header of this file)');
 }
