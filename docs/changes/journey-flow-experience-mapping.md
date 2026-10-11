@@ -80,3 +80,13 @@ Routes under `/api/flow-studio` (`/catalogs`, `/catalogs/data-objects`, `/catalo
 
 ## Fix notes per round (appended by fix agents)
 (none yet)
+
+## Fix notes — round 1
+Checks run: `npm run build` passes; `node --check server/lib/flowJourney.js` passes. Not run: a browser walk of J10.4 and the other journeys, and a live activate/test-run call (no browser or database session was used in this fix pass), so T1, B8, B12 and B13 are unverified at runtime.
+
+- **journey-flow-experience-mapping-T1** — CSS only: `.fs-scroll .fs-table { width:max-content; min-width:100%; overflow-wrap:normal; word-break:normal }`, `th/td min-width:5.5rem`, `.fs-pill { white-space:nowrap }`. Files: `src/components/admin/FlowStudioPanel.jsx`. Check: build only; still to re-check at 390px (no page sideways scroll, `.fs-scroll` scrollWidth > clientWidth).
+- **journey-flow-experience-mapping-B8** — The Spatial Journey World deal-journey stage panel now lists `stage.experience` (channel, display value, link as an anchor, "not set"/"not mapped" as the channel reports). Files: `src/components/SpatialJourneyWorld.jsx`. Not done: World Shell layer navigation (pushing a world layer through `useWorldLayers`) and a crystal-variant render from the channel; those need an owner decision on how a gate's world-layer value should navigate. Proposed training step in the fix report.
+- **journey-flow-experience-mapping-B10** — Not changed. Owner question: is one condition per connector acceptable, or must a connector hold an all/any list of conditions?
+- **journey-flow-experience-mapping-B11** — Not changed. Owner question: should each variant compile to its own scenario, or one scenario with per-variant experience and bindings under `flowJourney.variants`?
+- **journey-flow-experience-mapping-B12** — `startTestJourney` records the starter as every actor role of the scenario (`journey_rod_actors`, status complete, `contribution.testRun: true`); the journey preview states this. Files: `server/lib/flowJourney.js`.
+- **journey-flow-experience-mapping-B13** — The activation token now hashes `runningJourneys` and `atRemovedGates`; `activateJourney` returns ok with `alreadyActive: true` and an "already active" message, writing no event and applying nothing, when the stored `journeyActive.token` equals the new token. Files: `server/lib/flowJourney.js`.

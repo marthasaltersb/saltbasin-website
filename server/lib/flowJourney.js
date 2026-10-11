@@ -167,6 +167,7 @@ async function journeyImpact(row, compiled) {
   lines.push(prev ? `Replaces the active journey (flow version ${prev.version}) with flow version ${compiled.scenario.metadata.flowJourney.version}.` : `First activation: flow version ${compiled.scenario.metadata.flowJourney.version} becomes a journey the platform runs.`);
   lines.push(`Gates added ${added.length}, removed ${removed.length}, changed ${changed.length}; ${compiled.molecules.length} step molecule(s) are registered.`);
   lines.push(rods.length ? `${rods.length} journey(s) belonging to ${members.size} member(s) are running this journey now; ${atRemoved} of them sit at a gate this version removes.` : 'No member is running this journey yet.');
+  if (compiled.actorRoles?.length) lines.push(`Test runs: whoever starts a test run is recorded as every actor role this journey asks for (${compiled.actorRoles.join(', ')}), marked as a test-run assignment, so one person can walk every gate alone. Real runs are not changed.`);
   lines.push(`Experience: ${compiled.experience.mapped} value(s) render, ${compiled.experience.notSet} not set, ${compiled.experience.notMapped} not mapped, ${compiled.experience.invalid} invalid.`);
   return { lines, gatesAdded: added, gatesRemoved: removed, gatesChanged: changed, runningJourneys: rods.length, runningMembers: members.size, atRemovedGates: atRemoved, firstActivation: !prev };
 }
@@ -181,7 +182,7 @@ export async function previewJourney(user, id, { source = 'published' } = {}) {
   return {
     flowId: Number(row.id), flowName: row.metadata.name, source, version, publishedVersion: row.metadata.publishedVersion || null, scenarioKey: compiled.scenarioKey,
     ...rest, scenario: scenario ? { scenarioKey: scenario.scenarioKey, rodType: scenario.rodType, label: scenario.label, actorRoles: scenario.actorRoles, gates: scenario.gates.length } : null,
-    impact, canActivate: source === 'published' && compiled.ok && _shared.can(def, user, 'activateJourney'), token: compiled.ok ? `j${version}:${hash({ s: scenario, m: compiled.molecules })}` : null,
+    impact, canActivate: source === 'published' && compiled.ok && _shared.can(def, user, 'activateJourney'), token: compiled.ok ? `j${version}:${hash({ s: scenario, m: compiled.molecules, r: impact.runningJourneys, x: impact.atRemovedGates })}` : null,
   };
 }
 
@@ -214,6 +215,7 @@ export async function activateJourney(user, id, { approved, note } = {}) {
   const row = await _shared.load(user, id, { write: true });
   const prev = await previewJourney(user, id, { source: 'published' });
   if (!prev.ok) throw err(400, `The generated journey has ${prev.errors.length} problem(s) that block activating it: ${prev.errors.map((e) => e.message).join(' ')}`, 'compile_blocked', { impact: prev });
+  if (row.metadata.journeyActive?.token && row.metadata.journeyActive.token === prev.token) return { ok: true, alreadyActive: true, message: 'This journey is already active at this version with nothing changed, so nothing was applied.', scenarioKey: prev.scenarioKey, version: prev.version, applied: null, impact: prev.impact };
   if (approved !== prev.token) throw err(409, 'Review the impact and approve it to activate the journey.', 'impact_approval_required', { impact: prev });
   const { compiled, version } = await compileFor(row, 'published');
   const applied = await applyCompiled(compiled, Number(row.id));
@@ -249,5 +251,11 @@ export async function startTestJourney(user, id) {
   const { createUserJourneyRod } = await import('./journeyRods.js');
   try { await createUserJourneyRod(user.id, { scenarioKey: ja.scenarioKey, label: `${row.metadata.name} (test run)` }); } catch (e) { throw err(400, `The test journey could not start: ${e.message}`, 'start_failed'); }
   const rod = await db.prepare(`SELECT id, current_stage FROM journey_data_rods WHERE user_id=$1 AND metadata->>'scenarioKey'=$2 ORDER BY id DESC LIMIT 1`).get(user.id, ja.scenarioKey);
-  return { ok: true, rodId: Number(rod.id), currentStage: rod.current_stage, scenarioKey: ja.scenarioKey };
+  const sc = await db.prepare(`SELECT actor_roles FROM journey_scenarios WHERE scenario_key=$1`).get(ja.scenarioKey);
+  const roles = sc?.actor_roles || [];
+  const now = Date.now();
+  for (const roleKey of roles) {
+    await db.prepare(`INSERT INTO journey_rod_actors (rod_id,actor_key,role_key,contribution_status,contribution,required_from_stage,added_at) VALUES ($1,$2,$3,'complete',$4::jsonb,NULL,$5) ON CONFLICT (rod_id,actor_key,role_key) DO UPDATE SET contribution_status='complete'`).run(rod.id, `user:${user.id}`, roleKey, { testRun: true, assignedBy: 'flow_test_run' }, now);
+  }
+  return { ok: true, rodId: Number(rod.id), currentStage: rod.current_stage, scenarioKey: ja.scenarioKey, actorRolesAssigned: roles };
 }

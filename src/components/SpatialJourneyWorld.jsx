@@ -2294,6 +2294,23 @@ function DealJourneyPanel({ activeDeal, onSelectStage, onClose }) {
         {definition.stages.map((item, index) => <button key={item.key} type="button" onClick={() => onSelectStage(index)} style={{ border: index === selectedIndex ? '1px solid var(--sb-gold)' : '1px solid rgba(218,211,206,.22)', borderRadius: 10, background: index === selectedIndex ? 'rgba(196,132,58,.18)' : 'rgba(255,255,255,.035)', color: 'var(--sb-cream)', padding: '.6rem', textAlign: 'left', cursor: 'pointer' }}><span style={{ display: 'block', color: item.source === 'live' ? 'var(--sb-teal-300)' : 'var(--sb-dusty)', fontSize: '.62rem', letterSpacing: '.08em' }}>{String(item.id).padStart(2, '0')} · {item.source === 'live' ? 'SOURCED' : 'TEMPLATE'}</span><strong style={{ fontSize: '.76rem' }}>{item.title}</strong></button>)}
       </div>
       <p style={{ color: 'var(--sb-dusty)', fontSize: '.78rem', margin: '0 0 .8rem', maxWidth: 980 }}>{stage.description}</p>
+      {Array.isArray(stage.experience) && stage.experience.length ? (
+        <div data-testid="sjw-stage-experience" style={{ margin: '0 0 .9rem' }}>
+          <div className="sjw-eyebrow">Experience (from the journey flow)</div>
+          {stage.experience.map((x) => {
+            const label = String(x.channelKey || '').replace(/[_.-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+            const isLink = x.status === 'ok' && /^(\/|https:\/\/)\S*$/.test(String(x.display || ''));
+            return (
+              <div key={x.channelKey} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '.35rem 0', borderBottom: '1px dashed rgba(218,211,206,.14)' }}>
+                <span style={{ color: 'var(--sb-dusty)', fontSize: '.74rem' }}>{label}</span>
+                <strong style={{ color: x.status === 'ok' ? 'var(--sb-cream)' : 'var(--sb-dusty)', fontStyle: x.status === 'ok' ? 'normal' : 'italic', fontSize: '.76rem', textAlign: 'right', overflowWrap: 'anywhere' }}>
+                  {isLink ? <a href={x.display} style={{ color: 'var(--sb-teal-300)' }}>{x.display}</a> : (x.display || x.status)}
+                </strong>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, .8fr) minmax(320px, 1.2fr)', gap: 18 }}>
         <div><div className="sjw-eyebrow">Metrics</div>{stage.metrics.length ? stage.metrics.map((metric) => <div key={metric.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '.35rem 0', borderBottom: '1px dashed rgba(218,211,206,.14)' }}><span style={{ color: 'var(--sb-dusty)', fontSize: '.74rem' }}>{metric.label}</span><strong style={{ color: metric.flag === 'red' ? 'var(--sb-rose)' : 'var(--sb-cream)', fontSize: '.76rem' }}>{metric.value}</strong></div>) : <span style={{ color: 'var(--sb-dusty)', fontSize: '.74rem' }}>Populates as stage data is entered.</span>}</div>
         <div><div className="sjw-eyebrow">Journey fields</div>{stage.fields.map((field) => <div key={field.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '.35rem 0', borderBottom: '1px dashed rgba(218,211,206,.14)' }}><span style={{ color: 'var(--sb-dusty)', fontSize: '.74rem' }}>{field.label}</span><strong style={{ color: field.placeholder ? 'var(--sb-dusty)' : 'var(--sb-cream)', fontStyle: field.placeholder ? 'italic' : 'normal', fontSize: '.76rem', textAlign: 'right' }}>{field.value}</strong></div>)}</div>
