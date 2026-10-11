@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T03:15:49.884Z",
+  "exportedAt": "2026-10-11T03:18:53.864Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -90,7 +90,7 @@
       "backlog": 3
     },
     "journey-flow-experience-mapping": {
-      "status": "fix",
+      "status": "awaiting_retest",
       "lastRound": 2,
       "lastScore": "58/58",
       "lastReport": "docs/test-results/journey-flow-experience-mapping/round-2.md",
