@@ -271,6 +271,13 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'docs/data-model/catalog.json (committed Graphify output)' },
     permission: { requiredRole: 'admin', crud: ['read', 'update'], enforced: true },
   },
+  // Journey flow studio (2026-10-10): metadata-driven process flow builder. Both roles; create/publish/share/definition
+  // access is a permission policy in the studio definition (config_state flow_studio_definition), enforced by the server.
+  flowStudio: {
+    variant: 'rings', kind: 'embed', accent: 'gold',
+    dataBinding: { store: 'journey_data_rods (rod_type journey_flow), journey_rod_events' },
+    permission: { requiredRole: 'member', crud: ['read', 'update', 'approve'], enforced: true },
+  },
   leads: {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },

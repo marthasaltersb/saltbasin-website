@@ -30,6 +30,9 @@ export const MCP_SCOPES = Object.freeze({
   'renderings.approve': 'Approve or reject a pending data change; settings (administrators only; runs the finalization gate)',
   'datamodel.read': 'Read the data model map: tables, columns, relations, which routes and modules use them, and the data-object picker (held by administrators by default, grantable to any profile)',
   'datamodel.write': 'Change the data model map domain grouping rules (held by administrators by default, grantable to any profile)',
+  'flows.read': 'Read journey flows, templates, history and the studio definition',
+  'flows.write': 'Create, save, import, restore and template journey flows; change the studio definition (the studio access policy still applies)',
+  'flows.publish': 'Publish a journey flow as the journey definition (runs the finalization gate, same as the website)',
   'agent.runner.read': 'Read agent runner settings, the agent roster, runs, outputs, test plans and backlog seeds (administrators only)',
   'agent.runner.write': 'Prompt agents, stop runs, decide scope requests and proposals, change runner settings and move backlog seeds (administrators only)',
   'smoke.read': 'Read the status of the fictional production smoke test account (administrators only)',
@@ -50,6 +53,7 @@ async function versionHistoryOr404(userId, outputId) {
 
 import { ROUTE_TOOLS } from './mcpRouteTools.js';
 import { jsonProblemMessage } from './friendlyErrors.js';
+import { FLOW_STUDIO_TOOLS } from './mcpFlowStudioTools.js';
 
 /** Release loop tools: same functions and error statuses as server/routes/releaseLoop.js; the admin check is the registry's permission. */
 const rlActor = (user) => ({ id: user.id, label: user.name || user.email || `user ${user.id}` });
@@ -1228,7 +1232,7 @@ const PS_TOOLS = [
 
 // Tools that run an existing website route's own handler in-process (see mcpRouteTools.js), appended after the
 // core tools. Append-only like everything above.
-export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS, ...DM_TOOLS, ...PS_TOOLS]);
+export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS, ...DM_TOOLS, ...PS_TOOLS, ...FLOW_STUDIO_TOOLS]);
 
 export const MCP_TOOL_NAMES = Object.freeze(MCP_TOOLS.map((t) => t.name));
 

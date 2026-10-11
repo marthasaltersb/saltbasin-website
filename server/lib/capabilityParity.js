@@ -24,6 +24,7 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/releaseIntelligence.js': '/api/release-intelligence',
   'server/routes/sessionMapping.js': '/api/session-mapping',
   'server/routes/renderBindings.js': '/api/render-bindings',
+  'server/routes/flowStudio.js': '/api/flow-studio',
   'server/routes/careerReconciliation.js': '/api/career-reconciliation',
   'server/routes/careerBound.js': '/api/career-bound',
   'server/routes/outputTemplates.js': '/api/output-templates',
@@ -47,6 +48,7 @@ const CB = '/api/career-bound';
 const OT = '/api/output-templates';
 const RBA = '/api/render-bindings';
 const DMA = '/api/data-model';
+const FSA = '/api/flow-studio';
 const RR = `World Shell > Journeys > Career Master > Resume rollups`;
 const WS = 'World Shell';
 const PROF = `${WS} > Journeys > Career Master > Proficiency & Rollups > 3 · Rules & why`;
@@ -189,6 +191,15 @@ export const CAPABILITIES = Object.freeze([
   { key: 'render-bindings-pending', title: 'Pending changes queue and impact analysis', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Pending changes`, api: [`GET ${RBA}/changes/pending`, `GET ${RBA}/changes/:id/impact`], mcp: ['render_binding_pending_list', 'render_binding_change_impact'] },
   { key: 'render-bindings-decide', title: 'Approve or reject a pending change (admin)', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Pending changes > Approve / Reject`, api: [`POST ${RBA}/changes/:id/approve`, `POST ${RBA}/changes/:id/reject`], mcp: ['render_binding_change_decide'] },
   { key: 'render-bindings-settings', title: 'Binding policy, field editable roles and approval steps (admin)', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Settings`, api: [`GET ${RBA}/settings`, `PUT ${RBA}/settings/bindings`, `DELETE ${RBA}/settings/bindings`, `PUT ${RBA}/settings/fields/:portKey/:objectKey/:fieldKey`, `PUT ${RBA}/settings/steps/:id`], mcp: ['render_binding_settings_read', 'render_binding_settings_save'] },
+
+  // ── Journey flow studio ───────────────────────────────────────────────────
+  { key: 'flow-studio-flows', title: 'List, create, open, save and archive flows', group: 'Journey flow studio', ui: `${WS} > Journeys > Journey Flow Studio > Flows`, api: [`GET ${FSA}/flows`, `POST ${FSA}/flows`, `GET ${FSA}/flows/:id`, `PUT ${FSA}/flows/:id`, `DELETE ${FSA}/flows/:id`], mcp: ['flow_studio_flows_list', 'flow_studio_flow_create', 'flow_studio_flow_read', 'flow_studio_flow_save'] },
+  { key: 'flow-studio-validate-history', title: 'Validate a flow, read history, restore a version', group: 'Journey flow studio', ui: `${WS} > Journeys > Journey Flow Studio > (flow) > Check / History`, api: [`POST ${FSA}/flows/:id/validate`, `GET ${FSA}/flows/:id/history`, `POST ${FSA}/flows/:id/restore`], mcp: ['flow_studio_flow_validate', 'flow_studio_flow_history', 'flow_studio_flow_restore'] },
+  { key: 'flow-studio-publish', title: 'Preview the impact and publish a flow', group: 'Journey flow studio', ui: `${WS} > Journeys > Journey Flow Studio > (flow) > Publish`, api: [`GET ${FSA}/flows/:id/publish-preview`, `POST ${FSA}/flows/:id/publish`], mcp: ['flow_studio_publish_preview', 'flow_studio_flow_publish'] },
+  { key: 'flow-studio-export-import', title: 'Export a flow or template (JSON, HTML viewer, journey definition) and import JSON', group: 'Journey flow studio', ui: `${WS} > Journeys > Journey Flow Studio > (flow) > Export / Flows > Import`, api: [`GET ${FSA}/flows/:id/export`, `GET ${FSA}/templates/:id/export`, `GET ${FSA}/templates/seed/:key/export`, `POST ${FSA}/flows/import`], mcp: ['flow_studio_flow_export', 'flow_studio_flow_import'] },
+  { key: 'flow-studio-templates', title: 'Save a flow as a template; overwrite or delete a template with impact', group: 'Journey flow studio', ui: `${WS} > Journeys > Journey Flow Studio > Templates`, api: [`POST ${FSA}/flows/:id/save-as-template`, `GET ${FSA}/templates/:id/impact`, `PUT ${FSA}/templates/:id`, `DELETE ${FSA}/templates/:id`], mcp: ['flow_studio_template_save', 'flow_studio_template_change'] },
+  { key: 'flow-studio-agent-draft', title: 'Ask the studio agent to draft step or connector metadata', group: 'Journey flow studio', ui: `${WS} > Journeys > Journey Flow Studio > (flow) > Draft with agent`, api: [`POST ${FSA}/flows/:id/agent-draft`], mcp: ['flow_studio_agent_draft'] },
+  { key: 'flow-studio-definition', title: 'Studio definition: shapes, colours, fields, rules and access (Settings)', group: 'Journey flow studio', ui: `${WS} > Journeys > Journey Flow Studio > Settings`, api: [`GET ${FSA}/definition`, `PUT ${FSA}/definition`, `DELETE ${FSA}/definition`], mcp: ['flow_studio_definition_read', 'flow_studio_definition_save'] },
 
   // ── Platform access (this feature) ────────────────────────────────────────
   { key: 'access-tokens', title: 'Create, list and revoke access tokens', group: 'Platform access', ui: `${WS} > Journeys > Connected Agents`, api: ['GET /api/platform/tokens', 'POST /api/platform/tokens', 'DELETE /api/platform/tokens/:id'], mcp: null, mcpExclusion: 'Credentials are managed by a signed-in person in the website; a token can never mint or revoke tokens.' },
