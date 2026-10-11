@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:42:03.873Z",
+  "exportedAt": "2026-10-11T02:45:08.737Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -50,7 +50,7 @@
       "backlog": 0
     },
     "scoring-preferences-mcp": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "22/29",
       "lastReport": "docs/test-results/scoring-preferences-mcp/round-1.md",
@@ -138,7 +138,7 @@
       "backlog": 4
     },
     "proficiency-live-qr": {
-      "status": "validate",
+      "status": "failing",
       "lastRound": 8,
       "lastScore": "31/32",
       "lastReport": ".claude/worktrees/wf_1486aefc-79d-1/docs/test-results/proficiency-live-qr/round-8.md",
@@ -1433,7 +1433,7 @@
     {
       "id": "scoring-preferences-mcp-T2",
       "feature": "scoring-preferences-mcp",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
       "attempts": 1,
       "step": "J2.7 and J3.2: Scoring Weights card stale after MCP save/reset",
