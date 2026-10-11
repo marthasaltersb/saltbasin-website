@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:35:39.721Z",
+  "exportedAt": "2026-10-11T02:38:54.862Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -74,7 +74,7 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 4,
       "lastScore": "25/27",
       "lastReport": "docs/test-results/release-scope/round-4.md",
@@ -1716,7 +1716,7 @@
     {
       "id": "release-scope-F1-3",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J5.5 / interface parity",
@@ -1739,7 +1739,7 @@
     {
       "id": "release-scope-F1-4",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity",
@@ -1762,7 +1762,7 @@
     {
       "id": "release-scope-F1-5",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "integrate",
@@ -1783,7 +1783,7 @@
     {
       "id": "release-scope-F1-6",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "informational",
       "attempts": 0,
       "step": "sync",
@@ -1804,7 +1804,7 @@
     {
       "id": "release-scope-F1-7",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "informational",
       "attempts": 0,
       "step": "J5.5",
@@ -1823,7 +1823,7 @@
     {
       "id": "release-scope-F2-3",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity (spec)",
@@ -1849,7 +1849,7 @@
     {
       "id": "release-scope-F2-4",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Docs",
@@ -1897,9 +1897,9 @@
     {
       "id": "release-scope-F3-4",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Change scope from card/API/MCP on a deployed server",
       "rootCause": "Writes to ephemeral local file, never committed; card promises it appears after repo sync",
       "files": [
@@ -1918,15 +1918,21 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Scope changes persist on a deployed server: kept in config_…",
+          "commit": "75d4f19e33b5842d11aad788bac6de4ddf0e9737"
         }
       ]
     },
     {
       "id": "release-scope-F3-5",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "owner_direction_conflict",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Move a feature's scope",
       "rootCause": "No impact preview or approval step for a change that alters counts, scoring and launch behavior",
       "files": [
@@ -1945,15 +1951,21 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Added previewScopeMove, POST /api/release-tracker/scope/pre…",
+          "commit": "75d4f19e33b5842d11aad788bac6de4ddf0e9737"
         }
       ]
     },
     {
       "id": "release-scope-F3-6",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "process",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Docs",
       "rootCause": "Paragraph not updated after fix r3",
       "files": [
@@ -1970,15 +1982,21 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Rewrote the CLAUDE.md release-scope paragraph to name relea…",
+          "commit": "75d4f19e33b5842d11aad788bac6de4ddf0e9737"
         }
       ]
     },
     {
       "id": "release-scope-F3-7",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "product_defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Unknown/duplicate key via API or MCP",
       "rootCause": "Shared message text written for CLI",
       "files": [
@@ -1995,6 +2013,12 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Error hints no longer reference CLI commands. They now read…",
+          "commit": "75d4f19e33b5842d11aad788bac6de4ddf0e9737"
         }
       ]
     },
@@ -2053,7 +2077,7 @@
     {
       "id": "release-scope-T2-1",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.1 no qr-gated-outputs file",
@@ -2078,7 +2102,7 @@
     {
       "id": "release-scope-T2-2",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.2 no 'Not launched' line (ambiguous)",
@@ -2161,7 +2185,7 @@
     {
       "id": "release-scope-T2-5",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "recurred",
       "class": "spec_error",
       "attempts": 0,
       "step": "J5.3 Added-after-the-cut notes date",
@@ -2193,7 +2217,7 @@
     {
       "id": "release-scope-R4-1",
       "feature": "release-scope",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J2.7 MCP set_scope with TOKEN_A",
