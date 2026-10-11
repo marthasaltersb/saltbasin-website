@@ -694,7 +694,7 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
   return (
     <div className="sb-admin-shell" style={styles.shell}>
       <div className="sb-admin-topbar" style={styles.topbar}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div className="sb-admin-topbar-title" style={{ display: 'flex', alignItems: 'center' }}>
           {tab === 'content' && (
             <button
               type="button"
@@ -746,6 +746,7 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
           className="sb-admin-topbar-actions"
           style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}
         >
+          <div className="sb-admin-topbar-scroll">
           {/* Member: keep the simple 2-tab strip. Admin: render the view selector
               from the data-driven nav loaded into `nav`. Until nav loads we show
               nothing rather than flashing a stale layout. */}
@@ -822,8 +823,9 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
               View Public
             </a>
           )}
+          </div>
           <button
-            className="sb-btn sb-btn-outline"
+            className="sb-btn sb-btn-outline sb-admin-logout"
             style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
             onClick={logout}
           >

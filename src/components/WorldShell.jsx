@@ -878,6 +878,12 @@ export default function WorldShell() {
 }
 
 function TopBar({ user, view, onTab, career, commercial, hasCareerIsland, hasCommercialIsland }) {
+  const nav = useNavigate();
+  async function signOut() {
+    // Always land on the login page, even if the sign-out call fails (expired session, network blip).
+    try { await api.logout(); } catch { /* session may already be gone */ }
+    nav('/login', { replace: true });
+  }
   const trackedCount = hasCareerIsland ? career.opportunities.length : hasCommercialIsland ? commercial.opportunities.length : 0;
   const scored = (hasCareerIsland ? career.opportunities : hasCommercialIsland ? commercial.opportunities : []).filter((o) => o.score);
   const avgScore = scored.length ? Math.round(scored.reduce((s, o) => s + o.score.score, 0) / scored.length) : null;
@@ -907,6 +913,7 @@ function TopBar({ user, view, onTab, career, commercial, hasCareerIsland, hasCom
             <div style={S.profileRole}>{user.role === 'admin' ? 'System Architect' : 'Member'}</div>
           </div>
         </div>
+        <button type="button" data-testid="world-sign-out" style={S.navTab(false)} onClick={signOut}>Sign out</button>
       </div>
     </div>
   );
