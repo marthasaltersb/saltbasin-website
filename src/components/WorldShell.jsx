@@ -146,7 +146,9 @@ const MOBILE_CSS = `
   .sb-world-topbar { gap: 0.5rem !important; padding: 0.5rem 0.75rem !important; flex-wrap: wrap; }
   .sb-world-topbar .sb-world-brandsub { display: none; }
   .sb-world-topbar button { white-space: nowrap; }
-  .sb-world-stats .sb-world-stat-avg, .sb-world-profile-text { display: none !important; }
+  .sb-world-stats .sb-world-stat-avg { display: none !important; }
+  .sb-world-profile-text { max-width: 7.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sb-world-profile-text > div { overflow: hidden; text-overflow: ellipsis; }
   .sb-world-stats { margin-left: auto; gap: 0.6rem !important; order: 2; }
   .sb-world-topbar > div:first-child { order: 1; }
   .sb-world-topbar > div:nth-child(2) { order: 3; flex-basis: 100%; }
@@ -1330,7 +1332,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               </button>
               <button
                 style={S.ghost}
-                onClick={() => { setShowScoringWeights((v) => !v); if (!showScoringWeights && !scoringPreferences) loadScoringPreferences(); }}
+                onClick={() => { setShowScoringWeights((v) => !v); if (!showScoringWeights) loadScoringPreferences(); }}
               >
                 {showScoringWeights ? 'Hide Scoring Weights' : 'Scoring Weights'}
               </button>
@@ -1525,7 +1527,7 @@ function OutreachSection({
 // Personal opportunity-scoring weights (same API as the Classic Tools card: /api/career-agents/scoring-preferences,
 // and the career_scoring_preferences_* MCP tools). Whole percentages here; fractions on the wire.
 function ScoringWeightsPanel({ prefs, loading, draft, setDraft, sum, saving, save, reset }) {
-  if (loading || !prefs) return <div style={S.railEmpty}>Loading your scoring weights…</div>;
+  if (!prefs) return <div style={S.railEmpty}>Loading your scoring weights…</div>;
   const balanced = Math.abs(sum - 100) < 0.5;
   return (
     <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '0.6rem', margin: '0.4rem 0', fontSize: '0.74rem' }} data-testid="scoring-weights">
@@ -1782,7 +1784,7 @@ const S = {
   canvasHost: { position: 'absolute', inset: 0 },
   hint: { position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', fontSize: '0.7rem', color: 'rgba(245,240,232,0.55)', ...glass, padding: '0.4rem 0.9rem', borderRadius: 20 },
   webglFallback: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem', color: '#a9a49a', fontSize: '0.85rem' },
-  rail: { ...glass, position: 'absolute', top: '5.2rem', right: '1rem', bottom: '1rem', width: 300, borderRadius: 12, padding: '1rem', overflowY: 'auto', fontSize: '0.8rem' },
+  rail: { ...glass, position: 'absolute', top: '8.5rem', right: '1rem', bottom: '1rem', width: 300, borderRadius: 12, padding: '1rem', overflowY: 'auto', fontSize: '0.8rem' },
   railTitle: { fontFamily: 'Fraunces, serif', fontSize: '1rem', marginBottom: '0.6rem' },
   railSubtitle: { fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#c4843a', margin: '0.9rem 0 0.4rem' },
   railText: { color: '#a9a49a', fontSize: '0.78rem', lineHeight: 1.5 },

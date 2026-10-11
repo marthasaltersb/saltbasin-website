@@ -56,3 +56,10 @@ None. No table, column, seed or bootstrap change; no member row is written excep
 ## Fix notes per round (appended by fix agents)
 
 (none yet)
+
+## Fix notes — round 1
+
+- **scoring-preferences-mcp-T1 / S-J5.1** (Back to World covered by breadcrumb bar): the desktop rail offset (`S.rail.top`) was raised from 5.2rem to 8.5rem so it sits below the 44px-tall crumb bar. File: `src/components/WorldShell.jsx`. Checked by build; the offset arithmetic was not re-driven in a browser.
+- **scoring-preferences-mcp-T2 / S-J3.2** (stale Scoring Weights card): weights are now refetched every time the card opens (removed the `!scoringPreferences` guards), and cached values stay on screen while refreshing (loading placeholder only when nothing is cached). The draft resets from the fresh response in `loadScoringPreferences`. Files: `src/components/WorldShell.jsx`, `src/components/admin/CareerPlacementAgentsPanel.jsx`. Checked by build only.
+- **scoring-preferences-mcp-T3** (phone top bar shows only avatar): `.sb-world-profile-text` is no longer hidden at 700px or narrower; it gets a 7.5rem max width with ellipsis. Other stats stay hidden. File: `src/components/WorldShell.jsx`. Checked by build only. The profile chip stays inside the stats group rather than taking its own row.
+- **scoring-preferences-mcp-T4** (environment): no code change. The validator read the toast before it rendered, and its own recheck passed.

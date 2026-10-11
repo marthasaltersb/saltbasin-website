@@ -60,7 +60,7 @@ export default function CareerPlacementAgentsPanel({ scope }) {
   function toggleScoringPreferences() {
     const next = !showScoringPreferences;
     setShowScoringPreferences(next);
-    if (next && !scoringPreferences) loadScoringPreferences();
+    if (next) loadScoringPreferences();
   }
 
   if (loading) {
@@ -203,7 +203,7 @@ export default function CareerPlacementAgentsPanel({ scope }) {
                 can reweight your own — it never changes anyone else's scoring.
               </p>
               {showScoringPreferences && (
-                loadingScoringPreferences || !scoringPreferences ? (
+                !scoringPreferences ? (
                   <div style={{ color: '#8b877c', fontSize: '0.76rem' }}>Loading…</div>
                 ) : (
                   <>
