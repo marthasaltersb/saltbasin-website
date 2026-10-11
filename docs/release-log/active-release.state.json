@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T00:57:08.367Z",
+  "exportedAt": "2026-10-11T00:59:37.278Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -18,11 +18,11 @@
       "backlog": 2
     },
     "session-mapping": {
-      "status": "validate",
-      "lastRound": 6,
-      "lastScore": "55/56",
-      "lastReport": "docs/test-results/session-mapping/round-6.md",
-      "openBugs": 13,
+      "status": "passed",
+      "lastRound": 7,
+      "lastScore": "56/56",
+      "lastReport": "docs/test-results/session-mapping/round-7.md",
+      "openBugs": 12,
       "backlog": 2
     },
     "chart-gallery": {
@@ -57,14 +57,6 @@
       "openBugs": 4,
       "backlog": 0
     },
-    "proficiency-live-qr": {
-      "status": "failed",
-      "lastRound": 7,
-      "lastScore": "30/32",
-      "lastReport": "docs/test-results/proficiency-live-qr/round-7.md",
-      "openBugs": 18,
-      "backlog": 6
-    },
     "resume-rollups": {
       "status": "awaiting_retest",
       "lastRound": 4,
@@ -82,11 +74,11 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "20/25",
       "lastReport": "docs/test-results/release-scope/round-2.md",
-      "openBugs": 5,
+      "openBugs": 9,
       "backlog": 1
     },
     "journey-flow-experience-mapping": {
@@ -136,6 +128,14 @@
       "lastReport": "docs/test-results/platform-mcp/round-3.md",
       "openBugs": 16,
       "backlog": 3
+    },
+    "proficiency-live-qr": {
+      "status": "validate",
+      "lastRound": 7,
+      "lastScore": "30/32",
+      "lastReport": "docs/test-results/proficiency-live-qr/round-7.md",
+      "openBugs": 18,
+      "backlog": 6
     },
     "qr-gated-outputs": {
       "status": "passed",
@@ -486,26 +486,28 @@
     {
       "id": "session-mapping-round 4 E.8 failure (see docs/test-results/session-mapping/round-4.md; no earlier triage id exists)",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "verified",
       "class": "defect",
       "attempts": 0,
-      "step": "Settings: Transcripts folder set to a nonexistent path, then Import -> Scan server transcripts (desktop, mobile, and MCP session_mapping_import kind=scan)",
-      "rootCause": "scanTranscripts() in server/lib/sessionMapping.js lines 339-342 catches the 400 error thrown by listSessionFiles() (server/lib/sessionAnaly…",
-      "files": [
-        "server/lib/sessionMapping.js",
-        "src/components/admin/SessionMappingPanel.jsx",
-        "server/lib/mcpToolRegistry.js"
-      ],
+      "step": "Settings: Transcripts folder set to a nonexistent path, then Import -> Scan server transc…",
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "No entry in docs/triage/scope-review.json. scanTranscripts, listSessionFiles, the scan ro…"
+        "evidence": null
       },
       "history": [
         {
           "round": 5,
           "event": "found",
           "note": "scanTranscripts() in server/lib/sessionMapping.js lines 339…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v3, including …",
           "commit": null
         }
       ]
@@ -1242,7 +1244,7 @@
     {
       "id": "release-scope-F1-3",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J5.5 / interface parity",
@@ -1265,7 +1267,7 @@
     {
       "id": "release-scope-F1-4",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity",
@@ -1288,7 +1290,7 @@
     {
       "id": "release-scope-F1-5",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "integrate",
@@ -1309,7 +1311,7 @@
     {
       "id": "release-scope-F1-6",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "informational",
       "attempts": 0,
       "step": "sync",
@@ -1330,7 +1332,7 @@
     {
       "id": "release-scope-F1-7",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "informational",
       "attempts": 0,
       "step": "J5.5",
@@ -1349,7 +1351,7 @@
     {
       "id": "release-scope-T1",
       "feature": "release-scope",
-      "status": "backlog_pre_existing",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP: release tracker state (feature scope/added) has no MCP tool",
@@ -1363,15 +1365,141 @@
       "history": [
         {
           "round": 1,
-          "event": "found",
-          "note": "RELEASE_TRACKER_TOOLS (releaseTrackerService.js:505-513, in…",
-          "commit": null
-        },
-        {
-          "round": 1,
           "event": "fixed",
           "note": "Registered release_tracker_get_state in mcpToolRegistry.js …",
           "commit": "da35a4081b6594ab585a47499c61454e9ff80294"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "829da7a"
+        }
+      ]
+    },
+    {
+      "id": "release-scope-T2-1",
+      "feature": "release-scope",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J3.1 no qr-gated-outputs file",
+      "rootCause": "scripts/release-loop-resume.mjs:82-85 deliberately launches a backlog feature that owns an open production bug (HANDOVER: production bugs f…",
+      "files": [
+        "scripts/release-loop-resume.mjs"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec step J3.1 forbids any qr-gated-outputs file, but the standing production-bugs-first …"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "scripts/release-loop-resume.mjs:82-85 deliberately launches…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-T2-2",
+      "feature": "release-scope",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J3.2 no 'Not launched' line (ambiguous)",
+      "rootCause": "The phrase 'Not launched' also matches the unrelated 'Not launched locally (validated on production)' line at release-loop-resume.mjs:81. P…",
+      "files": [
+        "scripts/release-loop-resume.mjs"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The 'Not launched' text in J3.2 also matches the unrelated 'Not launched locally' line at…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "The phrase 'Not launched' also matches the unrelated 'Not l…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-T2-3",
+      "feature": "release-scope",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J4.1 estimate note lacks '(added after the cut)'",
+      "rootCause": "scripts/session-plan.mjs:45 prints a fixed note. releaseCut.js:126-129 records only outOfScope, so the CLI cannot tell whether the feature …",
+      "files": [
+        "scripts/session-plan.mjs",
+        "server/lib/releaseCut.js",
+        "server/lib/releaseScope.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Showing '(added after the cut)' is part of the request. parseItem in releaseCut.js record…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "scripts/session-plan.mjs:45 prints a fixed note. releaseCut…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-T2-4",
+      "feature": "release-scope",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J5.1 MCP_GAP: snapshot paste has no MCP tool",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Parity row release-tracker-admin (capabilityParity.js:174).…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-T2-5",
+      "feature": "release-scope",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J5.3 Added after the cut notes (four)",
+      "rootCause": "TrackerLayers.jsx:37-41 correctly renders one note per added entry (9 now, 6 counted, 3 backlog). The step still says four notes with one c…",
+      "files": [
+        "src/components/releaseTracker/TrackerLayers.jsx",
+        "docs/training/release-scope.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "TrackerLayers.jsx correctly renders one note per added entry (9 now: 6 counted, 3 backlog…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "TrackerLayers.jsx:37-41 correctly renders one note per adde…",
+          "commit": null
         }
       ]
     },
