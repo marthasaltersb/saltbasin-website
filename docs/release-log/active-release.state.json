@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T00:41:33.167Z",
+  "exportedAt": "2026-10-11T00:44:41.044Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -106,7 +106,7 @@
       "backlog": 0
     },
     "graphify-data-model-map": {
-      "status": "build",
+      "status": "reconcile",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
