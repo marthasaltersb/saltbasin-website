@@ -2,15 +2,16 @@
 
 Integration branch: `claude/zealous-meitner-5tuft5`. Process definition: `server/data/releaseLoop/definition.json`. Recorded 2026-10-11 by the release recorder. Nothing pushed.
 
-This run of the loop covered one feature, **session-mapping**, picking up at round 6. No sweep was run in this resume (`sweep: null`).
+This log covers two resume runs of the loop. Run 1 covered **session-mapping**, picking up at round 6. Run 2 covered **owner-error-messages**, round 1. No sweep was run in either (`sweep: null`).
 
 ## Final results
 
-| Feature | Status | Last round | Score | Baseline | Commit tested | Open blocking items |
-|---|---|---|---|---|---|---|
-| session-mapping | **passed** | 7 | 56 / 56 | v3 | `aca458d` | none |
+| Feature | Run | Status | Last round | Score | Baseline | Commit tested | Open blocking items |
+|---|---|---|---|---|---|---|---|
+| session-mapping | 1 | **passed** | 7 | 56 / 56 | v3 | `aca458d` | none |
+| owner-error-messages | 2 | **passed** | 1 | 25 / 25 | v1 | `1032699` | none (8 open bugs, none mapped to a baseline step; see that section) |
 
-**Features that did NOT pass in this run: none.** Only session-mapping was in this run's scope. Every other feature in `active-release.features.json` is outside this log; their state is in `docs/release-log/active-release.state.json` and the tracker, and this log makes no claim about them.
+**Features that did NOT pass in these runs: none.** Only session-mapping and owner-error-messages were in scope. Every other feature in `active-release.features.json` is outside this log; their state is in `docs/release-log/active-release.state.json` and the tracker, and this log makes no claim about them.
 
 ---
 
@@ -116,7 +117,99 @@ None.
 
 ---
 
-## Failed / refused commands and gaps reported in this run
+## owner-error-messages
+
+Title: Remaining raw error messages rewritten under the owner error rule (plain first sentence, red for failures, amber for cautions).
+Status: **passed** (round 1, 25/25 on baseline v1). Change spec: `docs/changes/owner-error-messages.md`. Training spec: `docs/training/owner-error-messages.md`, baseline `docs/training/baselines/owner-error-messages/v1.json` (commit `2867d61`).
+
+### Rounds
+
+| Round | Baseline | Commit tested | Steps passed / total | Not run | Result | Report |
+|---|---|---|---|---|---|---|
+| 1 | v1 | `1032699` | 25 / 25 | none | **passed** | [round-1.md](../test-results/owner-error-messages/round-1.md) |
+
+Only one round, on one baseline version, so no cross-version comparison applies.
+
+#### Round 1 (baseline v1) — 25 / 25
+
+No failures, nothing blocked, nothing not run. P.1-P.3, J1.1-J1.5, J2.1-J2.5, J3.1-J3.6, J4.1-J4.4, J5.1 and E.1-E.4 passed on desktop (1280x900) and phone (390x844, touch). Validator val-16400-1, fresh database `sb_rl_val_16400_1`, production build on port 16402. `baseline check` passed. Interface parity: API (Journey 5, `POST /api/release-intelligence/import/snapshot`) and MCP (`release_import_snapshot` with a token created on World Shell -> Connected Agents) return the same plain sentence plus a `Technical detail:` line with `isError: true`, status 400. No UI_GAP, MOBILE_GAP or MCP_GAP.
+
+Observations (not scored):
+
+1. None of the open bugs (B1, B5, B6, B7, B10, B11, B12, B13) maps to a baseline step, so the scored steps neither verify nor reproduce any of them. Code inspection, not scored: B6, B7, B10 (bare `HTTP <status>` fallbacks in `MyResumePanel.jsx:712`, `OutputTemplateConfigurator.jsx:154,270`, `LeadsPanel.jsx:61`) and B11 (`blocks/ProductExperienceBlocks.jsx:557`) are still present. B12's files now exist.
+2. Sun menu clicks sometimes hang for 40s while the 3D scene starves the page. The validator used the `/world?at=island:<id>` fallback, which the spec allows, for J1.5 on desktop and phone and to reopen My Resume in E.2. Every other screen was opened by click or tap.
+3. E.2 in the same tab as Journey 3: the red toast from J3.5 is still on screen when the valid text is submitted, so a literal in-tab reading would find the parser words in an old toast. E.2 passed in a fresh tab. (Proposed amendment, below.)
+4. E.2 valid text `{"package": {}}` returns the raw server text "packageKey must be a lowercase slug." This is outside the step's scope.
+5. The MCP tools for gate save and package import take structured objects, so the JSON-text sentence applies only to the website and to `release_import_snapshot`.
+6. Network log: one aborted `GET /api/career-agents/verification-current` on leaving Qualification Rules. The 400 responses on package-sources and import/snapshot are what the journeys expect. No page errors.
+7. Test environment: `ADMIN_INITIAL_PASSWORD` from `/var/tmp/sbpg/env.sh` did not reach the server through the validator's wrapper, so the admin had the seed default password. A first boot created `admin@saltbasin.net` until `ADMIN_EMAIL` was set explicitly. The validator dropped and recreated the database before testing. A stale round-1 `steps.jsonl` from an earlier session was replaced by this run's log. Exploratory runs are in `/var/tmp/sbpg/agents/val-16400-1/steps-explore.jsonl`.
+
+### Triage
+
+No triage this run: round 1 had no failures, so no triage or scope file was written for owner-error-messages (none exists under `docs/triage/`).
+
+### Fixes
+
+None in this run. The feature code is from the build: commit `2d4e7be` (adds `src/lib/friendlyError.js`, `server/lib/friendlyErrors.js`; rewrites messages in `server/lib/sessionMapping.js`, `server/routes/releaseIntelligence.js`, `server/lib/releaseTrackerService.js`, `server/lib/mcpToolRegistry.js` and the client panels), merged by `4460f88`.
+
+### Spec amendments
+
+None raised or approved. Baseline stays v1.
+
+**Proposed amendment, not yet raised (validator observation 3):** [E.2] should say "in a fresh tab" or "after the earlier toast has cleared", so the J3.5 toast still on screen cannot be read as the E.2 result. No amendment file exists yet in `docs/spec-amendments/owner-error-messages/`. The step was scored as written (fresh tab), so this does not block.
+
+Cross-feature note: this feature's wording change caused session-mapping's [E.1] failure in round 6. That was resolved by session-mapping amendment A2 (see that section), not by changing this feature.
+
+### Validator drift
+
+None found. Scored against pinned baseline v1. The round report's and the input's `specSha256` (`8eb46d80…aa59eeb2d2ff…948`, 62 hex characters) is the real hash with two characters missing. `sha256sum docs/training/owner-error-messages.md` gives `8eb46d8077e74a9881d566505fcb82782df39aa59f5eeb2d2ff014609d770948` (64 characters). At recording time `release-spec-baseline.mjs check` printed `baselines match: owner-error-messages v1`. So the spec did not change. The value in the report was copied wrong.
+
+### Integration commits
+
+| Commit | What |
+|---|---|
+| `2d4e7be` | Build: rewrite remaining raw parser/HTTP error messages under the owner error rule |
+| `4460f88` | Merge `release-loop/owner-error-messages-build` into `claude/zealous-meitner-5tuft5` |
+| `2867d61` | Baseline v1: owner-error-messages |
+| `731a52b` | Release loop logs: owner-error-messages |
+| `a3524da` | Tracker state sync. Contains `docs/test-results/owner-error-messages/round-1.md` |
+
+### Open bugs and backlog (NOT blocking this feature)
+
+The tracker state (`active-release.state.json`, exported 2026-10-11T01:09Z, before round 1 was synced) lists 8 open bugs for owner-error-messages, all found by the build agent at round 0 with 0 fix attempts. None maps to a baseline step, and round 1 passed every scored step, so none blocks this feature. Scope was never assigned (`scope: null`). The classification below is the recorder's reading of each bug's own class. It needs confirmation by triage.
+
+| Bug | Class | Kind | What / root cause | Evidence | Files | Owner |
+|---|---|---|---|---|---|---|
+| B1 | process | process_note | Build agent's walk cleanup: kill pattern matched the agent's own shell | build reconciliation; round 1 obs. 1 | none | release-loop process |
+| B5 | requirement_gap | needs a decision | Methodology Config is Classic Tools only, so it has no phone route. Parity needs a route or an explicit exclusion | change doc "Known limitations" | `MethodologyConfigPanel.jsx`, `capabilityParity.js` | owner-error-messages |
+| B6 | requirement_gap | open gap | LonetreeMvpPanel uses one `saveState` string for success and failure | code inspection round 1 | `LonetreeMvpPanel.jsx` | owner-error-messages |
+| B7 | requirement_gap | open gap | About 200 pass-through `setError(e.message)` sites remain (e.g. `blocks/ColumnWidgets.jsx:156`, `blocks/index.jsx:1532,1581`) | code inspection round 1 | `src/lib/api.js`, `src/lib/friendlyError.js`, `server/routes` | owner-error-messages |
+| B10 | requirement_gap | open gap | Bare `HTTP <status>` fallbacks missed by the build sweep | `MyResumePanel.jsx:712`, `OutputTemplateConfigurator.jsx:154,270`, `LeadsPanel.jsx:61` | same | owner-error-messages |
+| B11 | requirement_gap | open gap | Public-site blocks were outside the sweep: `error.message \|\| 'Unable to submit'` | `blocks/ProductExperienceBlocks.jsx:557` | `src/components/blocks`, `PublicSite.jsx` | owner-error-messages |
+| B12 | process | process_note (likely resolved) | Build branch predated integration commits | round 1: `scripts/release-scope.mjs` and `server/lib/releaseScope.js` now exist | same | release-loop process |
+| B13 | requirement_gap | process_note | Change spec has no cross-reference between the change and training docs | not tested (no step) | `docs/changes/owner-error-messages.md`, `docs/training/owner-error-messages.md` | owner-error-messages |
+
+### Escalated for a business definition
+
+None filed (`escalated: []`). B5 needs an owner decision, but triage has not escalated it. The question would be: "Should Methodology Config get a phone route, or be recorded as an explicit `uiExclusion` for phone in `capabilityParity.js`?"
+
+### Bugs at the per-bug fix-attempt limit (needsHuman)
+
+None (`needsHuman: []`). Every open bug has 0 fix attempts.
+
+---
+
+## Failed / refused commands and gaps reported
+
+### Run 2 (owner-error-messages)
+
+- No command failed or was refused during validation or recording.
+- Data discrepancy: the round-1 `specSha256` is 62 characters, two short of the real hash (see owner-error-messages -> Validator drift). The baseline check passes. State left: the report is unchanged, because the recorder does not rewrite validator output.
+- Test environment: `ADMIN_INITIAL_PASSWORD` was not passed through and the first boot used the wrong `ADMIN_EMAIL`. The validator recreated the database. State left: the database was dropped and the server stopped by PID, according to the report.
+- Tracker state `active-release.state.json` was exported before round 1 (it shows lastRound 0, status validate). The recorder has not re-synced it.
+
+### Run 1 (session-mapping)
+
 
 - **Missing triage files:** `docs/triage/session-mapping-round-6.md` and `docs/triage/session-mapping-round-6-scope.md` were reported as written by the triage and scope agents but do not exist in the main checkout, any worktree, or git history. Their content is preserved in this log only. State left: files absent.
 - **Integration agent:** `git add docs/test-results docs/triage docs/spec-amendments` staged nothing, so no log commit was made at integration. It left `docs/release-log/bug-ledger.json`, `history.json` and `tracker-carry.json` modified (one-line snapshot rewrites, probably from a concurrent tracker sync); these were since committed by tracker sync commits (`00dd16c`, `c4f3aa4`) and are not part of this recorder's commit.
