@@ -1,0 +1,942 @@
+{
+  "feature": "production-smoke-regression",
+  "spec": "docs/training/production-smoke-regression.md",
+  "version": 2,
+  "frozenAt": "2026-10-11T02:04:00.264Z",
+  "commitAtFreeze": "05b2c5de8b7c0a830c7aa51acb90aacd4923345f",
+  "specSha256": "113fc2faee11fdce3bcce9100e2cc453c088a0dbebb485eb945f31eb55073237",
+  "amendment": "A1",
+  "previous": 1,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "1955c9892b38c583",
+      "summary": "A fresh local Postgres database is created and the production build (`npm run build`) is served by `node server/index.js` on a free port `<PORT>`, with `SESSION"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "04f622f55dde8c57",
+      "summary": "In a browser, sign in at `/login` with the local administrator (`ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD`). If the **Career Portfolio Terms & Data Conditions** p"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "7e0f12a51f789ad6",
+      "summary": "The fictional test-account password used throughout is `Zk7!rivers-fictional-Q2x` (12+ characters, a capital, a number and a special character; local only)."
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "40aff62c306ce45a",
+      "summary": "A terminal in the repository root with `curl` and `node` is available. For API steps keep the administrator's session cookie in `admin.jar` (`curl -s -c admin.j"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5581e1d40d46b57c",
+      "summary": "Open `/world` as the administrator and click **Journeys** in the top bar. The **Journeys** grid contains a card titled **Production smoke** with the subtitle \"F"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f1254f870c944784",
+      "summary": "Read the **Test account** card. It shows Email `smoke-member@test.saltbasin.invalid`, Display name `Smoke Test Member`, Status **Not created**, Email delivery `"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "25b07c8ff370e3c8",
+      "summary": "Type `short` into **Password for the test account** and click **Create or ready the test account**. A red box (`role=\"alert\"`) reads \"The test account could not"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4b75a113ddf14e47",
+      "summary": "Replace the field with `Zk7!rivers-fictional-Q2x` and click **Create or ready the test account**. A note reads \"The test account was created and is ready.\"; Sta"
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f1c1f758fc1bed39",
+      "summary": "Type `Zk7!rivers-fictional-Q2x` again and click **Create or ready the test account**. The note reads \"The test account is ready.\" and Status still reads **Ready"
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "549db94e2fa74f9d",
+      "summary": "Scroll to **GitHub Actions secrets to add**. It lists `SMOKE_ADMIN_EMAIL`, `SMOKE_ADMIN_PASSWORD`, `SMOKE_MEMBER_PASSWORD` and `SMOKE_BASE_URL` (the last descri"
+    },
+    {
+      "id": "J1.7",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2f78ae920e248d27",
+      "summary": "Check the layout of the page you are on: `document.documentElement.scrollWidth` equals `clientWidth` (390 and 390 at phone width, 1280 and 1280 at desktop width"
+    },
+    {
+      "id": "J1.8",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b5e349b5888eb77a",
+      "summary": "Open a new private window, go to `/login` and sign in with `smoke-member@test.saltbasin.invalid` and `Zk7!rivers-fictional-Q2x`. The member's World opens at `/w"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "1477f4ee221a6466",
+      "summary": "`curl -s -i http://127.0.0.1:<PORT>/api/production-smoke/account` (no cookie) returns HTTP 401 with the body `{\"error\":\"unauthorized\"}`."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "25df37e36de3aa11",
+      "summary": "`curl -s -b admin.jar http://127.0.0.1:<PORT>/api/production-smoke/account` returns HTTP 200 JSON with `account.email` `smoke-member@test.saltbasin.invalid`, `e"
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "67940994c05d15dd",
+      "summary": "`curl -s -b admin.jar -X POST -H 'content-type: application/json' -d '{\"password\":\"short\"}' http://127.0.0.1:<PORT>/api/production-smoke/account` returns HTTP 4"
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "1610cadf53367a21",
+      "summary": "`curl -s -b admin.jar -X POST -H 'content-type: application/json' -d '{\"password\":\"Zk7!rivers-fictional-Q2x\"}' http://127.0.0.1:<PORT>/api/production-smoke/acco"
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4059badc54831687",
+      "summary": "The same POST as step 4, sent again, returns HTTP 200 with `\"created\":false` and `\"ready\":true`."
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "156781d4f16960aa",
+      "summary": "Sign in as the test account (`curl -s -c member.jar -H 'content-type: application/json' -d '{\"email\":\"smoke-member@test.saltbasin.invalid\",\"password\":\"Zk7!river"
+    },
+    {
+      "id": "J2.7",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "65a2f69226a60e63",
+      "summary": "`node -e \"import('./server/lib/email.js').then(async (m) => { console.log(JSON.stringify(await m.dispatchRaw({ to: 'smoke-member@test.saltbasin.invalid', subjec"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7d35684862325df6",
+      "summary": "In the browser as the administrator open `/world?at=island:connected-agents` (**Connected Agents**). Type `smoke-walk` into **Token name**, tick the scopes **sm"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "82825b31dd62b8c3",
+      "summary": "`curl -s -X POST -H 'authorization: Bearer <TOKEN>' -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -d '{\"jsonrpc\":\"2.0\",\"i"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bbf483b2d731bf67",
+      "summary": "The same call with `\"method\":\"tools/call\",\"params\":{\"name\":\"production_smoke_account_status\",\"arguments\":{}}` returns a result whose text is the same JSON as Jo"
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "47f5e539d3ad6ebd",
+      "summary": "The same call with `\"params\":{\"name\":\"production_smoke_account_ready\",\"arguments\":{}}` returns a result whose text contains `\"created\":false` and `\"ready\":true`"
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "21d0a1e3ac95562f",
+      "summary": "Create a second token named `smoke-read-only` (the form is cleared after each token, so tick only the scope **smoke.read** again). `curl` the `production_smoke_"
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4a7fc9cf3dfdc5e4",
+      "summary": "Open `/world?at=island:capabilities` (**Capabilities**) as the administrator and find the row titled \"See the fictional production smoke test account and ready "
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "8b3f2a2621964aa9",
+      "summary": "`node scripts/provision-smoke-account.mjs` with none of `SMOKE_ADMIN_EMAIL`, `SMOKE_ADMIN_PASSWORD`, `SMOKE_MEMBER_PASSWORD` set exits 2 and prints \"FAILED: The"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "999cca1590035f79",
+      "summary": "`SMOKE_BASE_URL=http://127.0.0.1:<PORT> SMOKE_ADMIN_EMAIL=<ADMIN_EMAIL> SMOKE_ADMIN_PASSWORD=wrong-Password-1! SMOKE_MEMBER_PASSWORD='Zk7!rivers-fictional-Q2x' "
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "981c523fd0772c63",
+      "summary": "`SMOKE_BASE_URL=http://127.0.0.1:<PORT> SMOKE_ADMIN_EMAIL=<ADMIN_EMAIL> SMOKE_ADMIN_PASSWORD=<ADMIN_INITIAL_PASSWORD> SMOKE_MEMBER_PASSWORD='Zk7!rivers-fictiona"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "bf03d071f5cb4e48",
+      "summary": "`SMOKE_BASE_URL=http://127.0.0.1:<PORT> SMOKE_ADMIN_EMAIL=<ADMIN_EMAIL> SMOKE_ADMIN_PASSWORD=<ADMIN_INITIAL_PASSWORD> SMOKE_MEMBER_PASSWORD=short node scripts/p"
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "7b29463c4dba4f89",
+      "summary": "`grep -n \"continue-on-error\" .github/workflows/production-smoke.yml .github/workflows/provision-smoke-account.yml` prints nothing (exit 1), and `grep -n \"SMOKE_"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "2c6da838d69e8181",
+      "summary": "`SMOKE_BASE_URL=http://127.0.0.1:<PORT> SMOKE_BACKEND_URL= SMOKE_MEMBER_PASSWORD='Zk7!rivers-fictional-Q2x' node scripts/production-smoke.mjs --out <OUT> --igno"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f1fb414758226c8f",
+      "summary": "`<OUT>/report.json` holds `R2.1` with status `pass` and actual \"HTTP 200, role member, mustChangePassword false\", `R2.2` with status `pass` and actual \"10 check"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a4d4bea0fc1145c0",
+      "summary": "The same command without `SMOKE_MEMBER_PASSWORD` exits 0, `R2.1` and `R2.2` are `not_run` with actual starting \"SMOKE_MEMBER_PASSWORD is not set, so the test ac"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8c40693f244a9ab3",
+      "summary": "The same command (with `SMOKE_BACKEND_URL=` empty) with `SMOKE_MEMBER_PASSWORD='Wrong-Password-9!'` exits 1, `R2.1` is `fail` with actual starting \"HTTP 401\" an"
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5fd2c0dfcacdd500",
+      "summary": "After step 1, `report.json` -> `suppressedWrites` is an array (possibly empty), and every entry of it is a non-GET request a page made that was answered inside "
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e84b28fef850021e",
+      "summary": "**S1.1** `GET <BASE>/api/health` returns HTTP 200 and JSON with `\"ok\": true` and `\"db\": \"ok\"`. If production cannot be reached at all, every later step is `bloc"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "814d064efd5a65f3",
+      "summary": "**S2.1** `GET <BASE>/api/site/published` returns HTTP 200 with at least one page in `pages` (a keyed object; read it with `Object.values`). The public pages are"
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "16d2733584b6b403",
+      "summary": "**S2.2** Open every public page from S2.1 on desktop. Each document loads with HTTP below 400, does not show the **Not Found** / \"That page doesn't exist (yet)."
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0803294a6f2f8834",
+      "summary": "**S2.3** On those same visits there is no page error and no console error (C.5)."
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1cecb270562af82a",
+      "summary": "**S2.4** On those same visits no request is answered with HTTP 5xx."
+    },
+    {
+      "id": "J6.6",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4990ab889e031c09",
+      "summary": "**S3.1** Open `<BASE>/world`: HTTP 200, visible text, no page or console error, no 5xx. (An anonymous visitor sees the sign-in prompt; that is the expected page"
+    },
+    {
+      "id": "J6.7",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8f16af8894f9e5e3",
+      "summary": "**S3.2** Open `<BASE>/login`: HTTP 200 and a form with one email field and one password field; no page or console error, no 5xx. Nothing is typed."
+    },
+    {
+      "id": "J6.8",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6f9f5ba30ab998e5",
+      "summary": "**S3.3** Take the first `/u/<slug>` link found on any public page in S2.2 and open it: HTTP 200, more than 40 characters of visible text, no \"not found\", no pag"
+    },
+    {
+      "id": "J6.9",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "86d26abf5b2e8da2",
+      "summary": "**S3.4** Open `<BASE>/r/AAAAAAAAAAAAAAAAAAAAAAAA` (24 characters, never issued): the heading **This link isn't available** appears, no page or console error, no"
+    },
+    {
+      "id": "J6.10",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7928cbb0597283a2",
+      "summary": "**S3.5** On the same page the response header `X-Robots-Tag` contains `noindex`, the element `meta[name=robots]` reads `noindex, nofollow, noarchive`, and the A"
+    },
+    {
+      "id": "J6.11",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4c623a3e92f66637",
+      "summary": "**S3.6** Open `<BASE>/r/short`: the same page and the same API status as S3.4."
+    },
+    {
+      "id": "J6.12",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d27a0e3bd1195eb4",
+      "summary": "**S4.1** `POST <BASE>/mcp` with JSON-RPC `tools/list` and no `Authorization` header returns HTTP 401, a JSON body with an `error` (the server sends `{\"jsonrpc\":"
+    },
+    {
+      "id": "J6.13",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8ddc6ff0f0706dde",
+      "summary": "**S5.1** Home page `/` at desktop: `document.documentElement.scrollWidth` equals `clientWidth` (no horizontal scroll)."
+    },
+    {
+      "id": "J6.14",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "15bd57cf1f532d93",
+      "summary": "**S5.2** Home page `/` at desktop: no two visible text or control boxes overlap. Checked boxes: `a, button, input, select, textarea, label, h1-h4, p, li` that a"
+    },
+    {
+      "id": "J6.15",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "11e05dddda2575ab",
+      "summary": "**S5.3** Home page at phone 390x844: as S5.1."
+    },
+    {
+      "id": "J6.16",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c9d113222c2af2a8",
+      "summary": "**S5.4** Home page at phone 390x844: as S5.2."
+    },
+    {
+      "id": "J6.17",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8c741b46610c58aa",
+      "summary": "**S5.5** `/login` at desktop: as S5.1."
+    },
+    {
+      "id": "J6.18",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d63cc80fd2fbe2ee",
+      "summary": "**S5.6** `/login` at desktop: as S5.2."
+    },
+    {
+      "id": "J6.19",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "67aa4f0b61b3fbd4",
+      "summary": "**S5.7** `/login` at phone: as S5.1."
+    },
+    {
+      "id": "J6.20",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b0f5143a1dde65f8",
+      "summary": "**S5.8** `/login` at phone: as S5.2."
+    },
+    {
+      "id": "J6.21",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6c7aedf2de6dfd2a",
+      "summary": "**S6.1** (public site vs the server behind it; `<SERVER>` = `https://saltbasin-website.onrender.com`, option `--backend`; with no separate server S6.1-S6.3 are "
+    },
+    {
+      "id": "J6.22",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "878817c241b61e25",
+      "summary": "**S6.2** `POST <SERVER>/mcp` with no token returns HTTP 401 with a JSON body: the target of the public site's `/mcp` proxy rule works."
+    },
+    {
+      "id": "J6.23",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "81b8a6aae50f35d3",
+      "summary": "**S6.3** `GET <SERVER>/r/AAAAAAAAAAAAAAAAAAAAAAAA` returns `X-Robots-Tag` containing `noindex` and `Referrer-Policy: no-referrer`."
+    },
+    {
+      "id": "J6.24",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "be2426f5e0c0930e",
+      "summary": "**R1.1** (= qr-gated-outputs baseline v2 `[J10.1]`) `<BASE>/r/AAAAAAAAAAAAAAAAAAAAAAAA` shows **This link isn't available**, with no hint whether the slug ever "
+    },
+    {
+      "id": "J6.25",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "433e50671a28e2d9",
+      "summary": "**R1.2** (= qr-gated-outputs baseline v2 `[J10.2]`) `<BASE>/r/short` shows the same page (same API status as R1.1)."
+    },
+    {
+      "id": "J6.26",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5e8fd90ba625b338",
+      "summary": "**R1.3** (= in-app-release-loop baseline v2 `[E.6]`) `GET <BASE>/api/release-loop/runs` with no cookie answers 401."
+    },
+    {
+      "id": "J6.27",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "db198703ef3cdae3",
+      "summary": "**R2.1** Sign in as the fictional test account: `POST <BASE>/api/auth/login` with `smoke-member@test.saltbasin.invalid` and `SMOKE_MEMBER_PASSWORD` returns HTTP"
+    },
+    {
+      "id": "J6.28",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4146b7e2da8feed8",
+      "summary": "**R2.2** Signed-in read-only replays as the test account; every check must pass (10 at v2): `GET /api/auth/me` is the test account; `GET /api/career/consent-sta"
+    },
+    {
+      "id": "J6.29",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0b19877944eda5c8",
+      "summary": "**R2.3** The frozen smoke suites (`docs/training/baselines/*/smoke.json`, today platform-agent-runner v1: J1.1, J1.7, J2.4, J4.4, J10.1, J10.9, J13.2, E.1) need"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0509b46aa85339cb",
+      "summary": "Precondition (validator's own throwaway test database only, never production): after creating the account, run `UPDATE users SET role='admin' WHERE email='smoke"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3d837c4f8b32c131",
+      "summary": "The profile address `smoke-test-member` already belongs to another member: the POST returns HTTP 409 `smoke_slug_taken` and changes nothing else."
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "48e122f8c3fb68c2",
+      "summary": "`POST /api/production-smoke/account` with no password while the account does not exist returns HTTP 400 `password_required` (this is what `production_smoke_acco"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d24342c7254c96ba",
+      "summary": "Precondition (test database only): as that administrator, `POST /api/auth/totp/setup`, then `POST /api/auth/totp/enable` with the 6-digit code computed from the"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0344948649ac881f",
+      "summary": "The site has not deployed this release yet: `scripts/provision-smoke-account.mjs` exits 1 and prints \"This site does not have the production smoke account route"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b48a7505b1b45063",
+      "summary": "Production is unreachable: S1.1 fails and every other step, including `R2.1`, `R2.2` and `R2.3`, is `blocked` with the network error; the score counts none of t"
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6df7ec11e527294a",
+      "summary": "The suite never prints, stores in `report.json`, or commits `SMOKE_MEMBER_PASSWORD`, `SMOKE_ADMIN_PASSWORD` or the session cookie value: after Journey 5 step 1,"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "88c62c633bcbc44a"
+    },
+    {
+      "title": "Test constraints (fixed)",
+      "kind": "context",
+      "hash": "3a37fe71d948ac7a"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Create and ready the test account on the website",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — The same through the API",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — The same through MCP",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — The provisioning workflow's script",
+      "kind": "journey",
+      "hash": "6a45861a3e6bc2fb"
+    },
+    {
+      "title": "Journey 5 — The suite, locally, with and without the account",
+      "kind": "journey",
+      "hash": "34160ae7fbafe763"
+    },
+    {
+      "title": "Journey 6 — The production suite (runs against `https://saltbasin.net` on GitHub Actions)",
+      "kind": "journey",
+      "hash": "6a4859540cfc9abf"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Scoring",
+      "kind": "context",
+      "hash": "8a8bc95e152c6a6f"
+    },
+    {
+      "title": "Filing a failure",
+      "kind": "context",
+      "hash": "1863fa4a0c6b35d0"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "P.1",
+      "P.2",
+      "P.3",
+      "P.4",
+      "J1.1",
+      "J1.2",
+      "J1.3",
+      "J1.4",
+      "J1.5",
+      "J1.6",
+      "J1.7",
+      "J1.8",
+      "J2.1",
+      "J2.2",
+      "J2.3",
+      "J2.4",
+      "J2.5",
+      "J2.6",
+      "J2.7",
+      "J3.1",
+      "J3.2",
+      "J3.3",
+      "J3.4",
+      "J3.5",
+      "J3.6",
+      "J4.1",
+      "J4.2",
+      "J4.3",
+      "J4.4",
+      "J4.5",
+      "J5.1",
+      "J5.2",
+      "J5.3",
+      "J5.4",
+      "J5.5",
+      "J6.1",
+      "J6.2",
+      "J6.3",
+      "J6.4",
+      "J6.5",
+      "J6.6",
+      "J6.7",
+      "J6.8",
+      "J6.9",
+      "J6.10",
+      "J6.11",
+      "J6.12",
+      "J6.13",
+      "J6.14",
+      "J6.15",
+      "J6.16",
+      "J6.17",
+      "J6.18",
+      "J6.19",
+      "J6.20",
+      "J6.21",
+      "J6.22",
+      "J6.23",
+      "J6.24",
+      "J6.25",
+      "J6.26",
+      "J6.27",
+      "J6.28",
+      "J6.29",
+      "E.2",
+      "E.3",
+      "E.5",
+      "E.6",
+      "E.7"
+    ],
+    "changed": [
+      "E.1",
+      "E.4"
+    ],
+    "added": [],
+    "retired": [],
+    "contextChanged": []
+  }
+}
