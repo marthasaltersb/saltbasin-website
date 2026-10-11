@@ -1,10 +1,10 @@
 # Data model map
 
-Generated from commit `e8e016d4479665986c72e35054aeac5338c55045` by Graphify 0.9.84 (code (tree-sitter AST, no LLM); postgres introspection (graphify.pg_introspect)). No LLM pass, no external API.
+Generated from commit `e63df368c285693c755156c0684eda2a3d03822d` by Graphify 0.9.84 (code (tree-sitter AST, no LLM); postgres introspection (graphify.pg_introspect)). No LLM pass, no external API.
 Source: fresh local database booted from server/db.js bootstrap + seed (schema and fictional seed rows only).
 
 - 229 tables and 0 views, 2653 columns, 313 foreign keys
-- 579 code files scanned (5636 symbols, 14891 edges); condensed graph 419 nodes / 1358 edges in 16 communities
+- 584 code files scanned (5699 symbols, 15109 edges); condensed graph 420 nodes / 1360 edges in 17 communities
 - Cross-check: Graphify's introspection found 294 table-to-table reference edges; the catalog's foreign keys give 294; they agree.
 
 ## Domains (default grouping; editable in the app)

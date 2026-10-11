@@ -10,19 +10,19 @@
   "llmPass": false,
   "externalApis": false
  },
- "generatedFromCommit": "e8e016d4479665986c72e35054aeac5338c55045",
+ "generatedFromCommit": "e63df368c285693c755156c0684eda2a3d03822d",
  "source": "fresh local database booted from server/db.js bootstrap + seed (schema and fictional seed rows only)",
  "counts": {
   "tables": 229,
   "views": 0,
   "columns": 2653,
   "foreignKeys": 313,
-  "codeFilesScanned": 579,
-  "codeSymbols": 5636,
-  "codeEdges": 14891,
-  "graphNodes": 419,
-  "graphEdges": 1358,
-  "communities": 16,
+  "codeFilesScanned": 584,
+  "codeSymbols": 5699,
+  "codeEdges": 15109,
+  "graphNodes": 420,
+  "graphEdges": 1360,
+  "communities": 17,
   "tablesWithNoCodeUse": 11
  },
  "crossCheck": {
@@ -36,7 +36,7 @@
  "domainsDefault": {
   "key": "data_model_map_rules",
   "version": 1,
-  "note": "Default domain grouping for the Data model map. A table belongs to the first domain whose `tables` list names it or whose `prefixes` match its start; everything else is 'Other'. Editable in World Shell > Data model map > Settings (saved as config_state row data_model_map_rules); the shipped file is only the default.",
+  "note": "Default domain grouping for the Data model map. A table belongs to the domain whose `tables` list names it exactly (an exact name always beats a prefix), else the first domain whose `prefixes` match its start; everything else is 'Other'. Editable in World Shell > Data model map > Settings (saved as config_state row data_model_map_rules); the shipped file is only the default.",
   "domains": [
    {
     "key": "career",
@@ -9458,6 +9458,10 @@
       "mount": "/api/member-site"
      },
      {
+      "file": "server/routes/releaseCut.js",
+      "mount": "/api/release-cut"
+     },
+     {
       "file": "server/routes/releaseIntelligence.js",
       "mount": "/api/release-intelligence"
      },
@@ -10323,6 +10327,10 @@
      {
       "file": "server/routes/qa.js",
       "mount": "/api/qa"
+     },
+     {
+      "file": "server/routes/releaseCut.js",
+      "mount": "/api/release-cut"
      },
      {
       "file": "server/routes/releaseIntelligence.js",
@@ -19587,6 +19595,10 @@
       "mount": "/api/qa"
      },
      {
+      "file": "server/routes/releaseCut.js",
+      "mount": "/api/release-cut"
+     },
+     {
       "file": "server/routes/releaseIntelligence.js",
       "mount": "/api/release-intelligence"
      },
@@ -22073,6 +22085,10 @@
      {
       "file": "server/routes/qa.js",
       "mount": "/api/qa"
+     },
+     {
+      "file": "server/routes/releaseCut.js",
+      "mount": "/api/release-cut"
      },
      {
       "file": "server/routes/releaseIntelligence.js",
@@ -32599,6 +32615,10 @@
       "mount": "/api/qa"
      },
      {
+      "file": "server/routes/releaseCut.js",
+      "mount": "/api/release-cut"
+     },
+     {
       "file": "server/routes/releaseIntelligence.js",
       "mount": "/api/release-intelligence"
      },
@@ -34697,6 +34717,10 @@
       "mount": "/api/qa"
      },
      {
+      "file": "server/routes/releaseCut.js",
+      "mount": "/api/release-cut"
+     },
+     {
       "file": "server/routes/releaseIntelligence.js",
       "mount": "/api/release-intelligence"
      },
@@ -36139,6 +36163,10 @@
       "mount": "/api/qa"
      },
      {
+      "file": "server/routes/releaseCut.js",
+      "mount": "/api/release-cut"
+     },
+     {
       "file": "server/routes/releaseIntelligence.js",
       "mount": "/api/release-intelligence"
      },
@@ -36214,5 +36242,5 @@
    }
   }
  ],
- "generatedAt": "2026-10-10T21:08:50.164Z"
+ "generatedAt": "2026-10-11T00:35:14.443Z"
 }
