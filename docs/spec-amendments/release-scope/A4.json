@@ -1,0 +1,52 @@
+{
+  "id": "A4",
+  "feature": "release-scope",
+  "fromBaseline": 3,
+  "proposedBy": "fix:release-scope:r3",
+  "round": 3,
+  "triageItems": ["release-scope-F2-3"],
+  "reason": "Round 3 gave scope changes a screen, an API route and MCP tools (interface parity v3). The spec header says repository tooling only, and no step proves the screen or MCP path (UI_GAP / MCP_GAP).",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "Where things are (header)",
+      "before": "Changing a scope is repository tooling only (no platform screen or MCP tool; see the change spec's parity note).",
+      "after": "Changing a scope works three ways through one function. Screen: World Shell > Release tracker > Settings > Release scope. API: `POST /api/release-tracker/scope`. MCP: `release_tracker_set_scope`.",
+      "tracesTo": "docs/changes/release-scope.md Interface parity; owner interface-parity direction v3 (2026-10-09)",
+      "whyNeeded": "The old sentence now contradicts the product and the change spec."
+    },
+    {
+      "op": "add",
+      "stepId": "J2.6",
+      "before": null,
+      "after": "Screen path: Release scope card on the tracker Settings tab; empty Decided by gives a red `Give who decided.`; a valid move records scopeHistory with decidedBy tester and reason training check; undo with git checkout. (Proposed as J2.5; J2.5 is already the undo step and ids are never reused, so the reviewer assigned J2.6. The reviewer replaced 'the move button' and 'a confirmation naming the move' with the real labels and text from ScopeCard.jsx and releaseScopeChange.js.)",
+      "tracesTo": "release-scope J2.1-J2.2 and E.2; docs/changes/release-scope.md Interface parity (UI_GAP)",
+      "whyNeeded": "Proves scope change is reachable by point-and-click with the same decider rule as the CLI."
+    },
+    {
+      "op": "add",
+      "stepId": "J2.7",
+      "before": null,
+      "after": "MCP path: `mcp-call.mjs call release_tracker_set_scope` as an admin token succeeds with from/to/message; a repeat gives 409 no_change; a member token gets 403 forbidden. (Proposed as J2.6. The reviewer replaced the unspecified 'missing reason' case, which the tool schema would reject before the function runs, with the deterministic repeat-call case that mirrors J2.3, and wrote the token fixture and exact messages from mcpServer.js and releaseScopeChange.js.)",
+      "tracesTo": "release-scope Interface parity (MCP_GAP); owner direction 'every capability works three ways'; platform-mcp J6.3",
+      "whyNeeded": "Proves the MCP path calls the same function with the same permissions."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:release-scope:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass: no expectation changed except the stale header sentence, which contradicts the change spec",
+      "Retire only duplicates": "pass: no step retired",
+      "Exact": "pass after the reviewer's wording: the proposals named no button label, confirmation text, token fixture or error text; the approved text uses the labels and messages found in ScopeCard.jsx, releaseScopeChange.js and mcpServer.js",
+      "Reachable": "pass: J2.6 is point-and-click on the Settings tab (stacked-field card, checked at 390px by the fix agent); J2.7 is a cli step by design, with tokens created through the Connected Agents screen",
+      "Deterministic": "pass: both steps start from release-loop-tooling in backlog (the J2.5 undo restores it) and each ends with an undo",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: the steps test the stated behaviour (decider rule, same function, same permissions), not the code structure",
+      "Errors plain and coloured": "pass: 'Give who decided.' is plain and shown red (role=alert); MCP errors carry plain messages with status and code"
+    },
+    "note": "The product is right and the spec was stale. The new steps got ids J2.6 and J2.7 because J2.5 already exists. Texts were written from the code and not run live in this review; the first validation round against baseline v4 exercises them.",
+    "at": "2026-10-11T02:00:00Z"
+  }
+}
