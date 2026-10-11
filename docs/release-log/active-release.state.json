@@ -1,14 +1,6 @@
 {
-  "exportedAt": "2026-10-11T00:32:39.776Z",
+  "exportedAt": "2026-10-11T00:38:24.271Z",
   "features": {
-    "platform-mcp": {
-      "status": "failed",
-      "lastRound": 3,
-      "lastScore": "65/65",
-      "lastReport": "docs/test-results/platform-mcp/round-3.md",
-      "openBugs": 16,
-      "backlog": 3
-    },
     "release-intelligence": {
       "status": "awaiting_retest",
       "lastRound": 4,
@@ -26,7 +18,7 @@
       "backlog": 2
     },
     "session-mapping": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 5,
       "lastScore": "55/56",
       "lastReport": "docs/test-results/session-mapping/round-5.md",
@@ -42,7 +34,7 @@
       "backlog": 14
     },
     "release-cut-and-session-plans": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -50,7 +42,7 @@
       "backlog": 0
     },
     "owner-error-messages": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -58,7 +50,7 @@
       "backlog": 0
     },
     "scoring-preferences-mcp": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -90,20 +82,12 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "24/25",
       "lastReport": "docs/test-results/release-scope/round-1.md",
       "openBugs": 5,
       "backlog": 1
-    },
-    "journey-flow-studio": {
-      "status": "failed",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
-      "backlog": 0
     },
     "journey-flow-experience-mapping": {
       "status": "failed",
@@ -113,8 +97,24 @@
       "openBugs": 0,
       "backlog": 0
     },
+    "journey-flow-studio": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
     "graphify-data-model-map": {
-      "status": "failed",
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "tracker-world-navigation": {
+      "status": "build",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -129,13 +129,13 @@
       "openBugs": 0,
       "backlog": 0
     },
-    "tracker-world-navigation": {
-      "status": "failed",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
-      "backlog": 0
+    "platform-mcp": {
+      "status": "validate",
+      "lastRound": 3,
+      "lastScore": "65/65",
+      "lastReport": "docs/test-results/platform-mcp/round-3.md",
+      "openBugs": 16,
+      "backlog": 3
     },
     "qr-gated-outputs": {
       "status": "passed",
@@ -267,39 +267,6 @@
     }
   },
   "bugs": [
-    {
-      "id": "platform-mcp-PR1-1",
-      "feature": "platform-mcp",
-      "status": "open",
-      "class": "product_defect",
-      "attempts": 0,
-      "step": "platform-mcp v4 E.3 (also J2.2)",
-      "rootCause": "saltbasin.net is served by Netlify (netlify.toml); only /api/* is proxied to Render. /mcp is mounted outside /api, so on production no agen…",
-      "files": [
-        "netlify.toml"
-      ],
-      "scope": null,
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Production smoke round 1 (https://github.com/marthasaltersb…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "still_failing_in_production",
-          "note": "Production round 2: S4.1 still failing",
-          "commit": null
-        }
-      ],
-      "verifyBy": "production",
-      "prodSteps": [
-        "S4.1"
-      ],
-      "stepId": "E.3",
-      "url": "https://saltbasin.net/mcp"
-    },
     {
       "id": "release-intelligence-F4-4",
       "feature": "release-intelligence",
@@ -1384,6 +1351,39 @@
           "commit": "da35a4081b6594ab585a47499c61454e9ff80294"
         }
       ]
+    },
+    {
+      "id": "platform-mcp-PR1-1",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "platform-mcp v4 E.3 (also J2.2)",
+      "rootCause": "saltbasin.net is served by Netlify (netlify.toml); only /api/* is proxied to Render. /mcp is mounted outside /api, so on production no agen…",
+      "files": [
+        "netlify.toml"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Production smoke round 1 (https://github.com/marthasaltersb…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "still_failing_in_production",
+          "note": "Production round 2: S4.1 still failing",
+          "commit": null
+        }
+      ],
+      "verifyBy": "production",
+      "prodSteps": [
+        "S4.1"
+      ],
+      "stepId": "E.3",
+      "url": "https://saltbasin.net/mcp"
     },
     {
       "id": "qr-gated-outputs-PR1-2",
