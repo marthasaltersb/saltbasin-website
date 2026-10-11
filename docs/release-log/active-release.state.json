@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:22:15.986Z",
+  "exportedAt": "2026-10-11T01:28:31.582Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -81,15 +81,15 @@
       "openBugs": 12,
       "backlog": 1
     },
-    "journey-flow-experience-mapping": {
-      "status": "failed",
+    "journey-flow-studio": {
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 5,
       "backlog": 0
     },
-    "journey-flow-studio": {
+    "journey-flow-experience-mapping": {
       "status": "build",
       "lastRound": 0,
       "lastScore": null,
@@ -98,11 +98,11 @@
       "backlog": 0
     },
     "graphify-data-model-map": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/graphify-data-model-map/round-1.md",
-      "openBugs": 6,
+      "openBugs": 11,
       "backlog": 0
     },
     "tracker-world-navigation": {
@@ -1580,9 +1580,110 @@
       ]
     },
     {
+      "id": "journey-flow-studio-B2",
+      "feature": "journey-flow-studio",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "full-walk",
+      "rootCause": "Agent used pkill instead of PID files.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-studio-B9",
+      "feature": "journey-flow-studio",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "navigation",
+      "rootCause": "Entry point added to Classic Tools although owner said everything comes from the World Shell.",
+      "files": [
+        "src/components/admin/AdminShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-studio-B10",
+      "feature": "journey-flow-studio",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "agent draft",
+      "rootCause": "No agent_definitions row for the studio agent.",
+      "files": [
+        "server/lib/flowStudio.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-studio-B11",
+      "feature": "journey-flow-studio",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "roles",
+      "rootCause": "Platform has no role registry; owned by security-provisioning-model.",
+      "files": [
+        "server/lib/flowStudioDefinition.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-studio-B13",
+      "feature": "journey-flow-studio",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "records",
+      "rootCause": "Walk summarised only in the change spec; freezing is the integrator's step.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "graphify-data-model-map-B6",
       "feature": "graphify-data-model-map",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "J6.11/J6.12, island, routes",
@@ -1615,7 +1716,7 @@
     {
       "id": "graphify-data-model-map-B7",
       "feature": "graphify-data-model-map",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "product_defect",
       "attempts": 1,
       "step": "journey-flow picker",
@@ -1677,7 +1778,7 @@
     {
       "id": "graphify-data-model-map-B9",
       "feature": "graphify-data-model-map",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "known limitation: code graph",
@@ -1709,7 +1810,7 @@
     {
       "id": "graphify-data-model-map-B10",
       "feature": "graphify-data-model-map",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "informational",
       "attempts": 1,
       "step": "CLAUDE.md note",
@@ -1734,6 +1835,114 @@
           "event": "fixed",
           "note": "CLAUDE.md organization_profiles ordering note now says it n…",
           "commit": "edca3104519700c0b204d0d462cffbd712b1887b"
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-F1-2",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "B8",
+      "rootCause": "Fix changed behavior described by the frozen spec (permission gating) and J1.1 is wrong on phones; no amendments filed",
+      "files": [
+        "docs/spec-amendments/graphify-data-model-map/",
+        "docs/training/graphify-data-model-map.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-F1-3",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "B6 permission gating",
+      "rootCause": "Grants can only be created by hand-editing config_state; no parity for grant/revoke",
+      "files": [
+        "server/lib/permissions.js",
+        "server/lib/mcpServer.js",
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-F1-5",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "B9 code half",
+      "rootCause": "Only module-level view built; symbol-level graph remains in git-ignored graphify-out",
+      "files": [
+        "server/lib/dataModelMap.js",
+        "src/components/admin/DataModelMapPanel.jsx",
+        "docs/data-model/graph.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-F1-7",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "Known limitations: dynamic SQL, parent-commit stamp",
+      "rootCause": "Listed in change spec Known limitations; by design, REPORT.md labels leads not proof",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-F1-8",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J8.5 phone alert polish",
+      "rootCause": "Alert not scrolled into view",
+      "files": [
+        "src/components/admin/DataModelMapPanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
         }
       ]
     },
