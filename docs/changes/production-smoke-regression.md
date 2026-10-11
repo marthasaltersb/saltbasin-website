@@ -1,13 +1,13 @@
 # Change spec — production smoke and regression
 
-Version 2 · 2026-10-10 · feature key `production-smoke-regression` · release 0.3.0 (`2026-10-10-production-hardening`) · branch `release-loop/production-smoke-regression-build` (built on `claude/prod-smoke-regression-0.3.0`, version 1)
+Version 2 · 2026-10-11 · feature key `production-smoke-regression` · release 0.3.0 (`2026-10-10-production-hardening`) · branch `release-loop/production-smoke-regression-build` (built on `claude/prod-smoke-regression-0.3.0`, version 1)
 
 ## Traces to
 
 | Earlier work | Version / commit | Relationship |
 | --- | --- | --- |
 | `docs/changes/production-smoke-regression.md` | v1, branch `claude/prod-smoke-regression-0.3.0` (`cbba5f7`) | The anonymous, read-only suite this version extends. v1's "no sign-in, no account" rule (C.2) is replaced by the owner decision below |
-| `docs/training/production-smoke-regression.md` | v1 (never frozen as a baseline) | Replaced by v2: restructured into Preconditions / Journeys / Edge cases for the baseline parser; the 25 suite steps keep their ids (S*, R*) and become Journey 6; R2.1-R2.3 are redefined, see below |
+| `docs/training/production-smoke-regression.md` | v1 (never frozen as a baseline) | Replaced by v2: restructured into Preconditions / Journeys / Edge cases for the baseline parser; the suite steps keep their ids (S*, R*), including S6.1-S6.3 (public site vs the Render server, added on the branch after round 1), and become Journey 6; R2.1-R2.3 are redefined, see below |
 | `docs/test-results/production-smoke-regression/round-1.md` | production round 1 (16/25 on `https://saltbasin.net`, 2026-10-10) | Failures S3.4-S3.6, S4.1, R1.1, R1.2 (bugs `platform-mcp-PR1-1`, `qr-gated-outputs-PR1-2`, `qr-gated-outputs-PR1-3`) |
 | `netlify.toml` fix, `main` `bd6a576` | owner, 2026-10-10 | Proxies `/mcp`, sets `/r/*` and `/release-tracker/*` privacy headers, rebuilds the frontend. Already in this branch's `netlify.toml`. The next production run must re-test S3.4, S3.5, S3.6, S4.1, R1.1, R1.2 |
 | `docs/release-log/HANDOVER-0.3.0.md` | 0.2.0 cut, `7d76341` | Defines the feature: test `https://saltbasin.net` after each merge to `main` |
@@ -21,7 +21,7 @@ Supersedes training spec v1 of this feature. No earlier frozen baseline of anoth
 ## Owner decisions (2026-10-10) and how this version meets them
 
 1. **Netlify fix is on `main` (`bd6a576`).** Not repeated here. The suite is unchanged for S3.4-S3.6, S4.1, R1.1, R1.2; the next production run after it must pass them (the three open production bugs close only when it does).
-2. **Failures need fixes, not quieter notifications.** The workflow stays red on any failed step (no `continue-on-error`, `process.exitCode = 1` on a failure). Nothing was loosened. The only change in tone is a warning annotation when the optional secret is missing, which makes a `not_run` louder, not quieter. **Proposed merge to `main` (not done here; the owner or integrator merges):** `.github/workflows/production-smoke.yml`, `.github/workflows/provision-smoke-account.yml`, `scripts/production-smoke.mjs`, `scripts/provision-smoke-account.mjs` and `scripts/production-rounds.mjs` must be on `main`, because a `push` trigger fires from the workflow file on the pushed branch and `workflow_dispatch` only sees workflows on the default branch. Once they are on `main` the suite runs after every merge to `main` (after Render reports the merged commit live). The existing trigger on `claude/prod-smoke-regression-0.3.0` can be removed in the same merge.
+2. **Failures need fixes, not quieter notifications.** The workflow stays red on any failed step (no `continue-on-error`, `process.exitCode = 1` on a failure). Nothing was loosened. The only change in tone is a warning annotation when the optional secret is missing, which makes a `not_run` louder, not quieter. **Proposed merge to `main` (not done here; nothing was pushed; the owner or integrator merges the integration branch or this feature branch):** `.github/workflows/production-smoke.yml`, `.github/workflows/provision-smoke-account.yml`, `scripts/production-smoke.mjs`, `scripts/provision-smoke-account.mjs` and `scripts/production-rounds.mjs` must be on `main`, because a `push` trigger fires from the workflow file on the pushed branch and `workflow_dispatch` only sees workflows on the default branch. Once they are on `main` the suite runs after every merge to `main` (after Render reports the merged commit live). The existing trigger on `claude/prod-smoke-regression-0.3.0` can be removed in the same merge.
 3. **One dedicated fictional production test account was approved.** Built below: `smoke-member@test.saltbasin.invalid`, display name "Smoke Test Member", no real data, excluded from all email, platform and Career Portfolio terms accepted, provisioned through the platform's own admin API by a `workflow_dispatch` job that uses GitHub Actions secrets only, never a committed credential and never production database access. R2.1 and R2.2 now use it.
 
 ## What changed, in one paragraph
@@ -49,7 +49,7 @@ Additive only, no new tables, no new columns, nothing written by seed/bootstrap.
 
 - `.github/workflows/provision-smoke-account.yml` (new, manual only): runs `scripts/provision-smoke-account.mjs` with `SMOKE_ADMIN_EMAIL`, `SMOKE_ADMIN_PASSWORD`, `SMOKE_MEMBER_PASSWORD`, optional input `base_url`. The script signs in as the administrator through the API, reads the status, POSTs the member password, verifies `ready` and `emailExcluded`, and signs out even on failure. Exit 0 ready; 1 refused or not ready; 2 a secret is missing or sign-in failed. A two-step-sign-in administrator is refused with a plain explanation.
 - `.github/workflows/production-smoke.yml`: passes `SMOKE_MEMBER_PASSWORD` into the suite step and raises a `::warning::` when it is empty. Still red on any failure.
-- `scripts/production-smoke.mjs`: `runSignedIn()` records R2.1 (sign-in), R2.2 (ten read-only checks: `/api/auth/me`, career consent current, own profile, resume outputs list, career-agent opportunities list, `/api/release-loop/runs` 403 and `/api/production-smoke/account` 403 for a member, and `/world` at desktop and phone and `/member` at desktop with no sign-in prompt, no gate, no errors), and R2.3 (frozen smoke suites, `not_run` by design: they need an administrator, write data and run a fixture worker never enabled on Render). Total 26 steps. Each step also carries `baselineStep` (`J6.<position>`). Playwright path and Chromium path can be given with `PLAYWRIGHT_MODULE` / `SMOKE_CHROMIUM_PATH` for sandbox rehearsal.
+- `scripts/production-smoke.mjs`: `runSignedIn()` records R2.1 (sign-in), R2.2 (ten read-only checks: `/api/auth/me`, career consent current, own profile, resume outputs list, career-agent opportunities list, `/api/release-loop/runs` 403 and `/api/production-smoke/account` 403 for a member, and `/world` at desktop and phone and `/member` at desktop with no sign-in prompt, no gate, no errors), and R2.3 (frozen smoke suites, `not_run` by design: they need an administrator, write data and run a fixture worker never enabled on Render). Total 29 steps (S1.1-S5.8, S6.1-S6.3, R1.1-R1.3, R2.1-R2.3). Each step also carries `baselineStep` (`J6.<position>`). Playwright path and Chromium path can be given with `PLAYWRIGHT_MODULE` / `SMOKE_CHROMIUM_PATH` for sandbox rehearsal.
 
 ## Secrets the owner must add (exact names)
 
@@ -72,14 +72,18 @@ Already present and reused: `RENDER_API_KEY`, `RENDER_SERVICE_ID`. After adding 
 - The test account's profile is not published, so S3.3 remains `not_run` unless a public page links to a member site.
 - Finalization: readying the account records terms for a fictional account at the owner's explicit approval; it is not an approval or publish of member content, so it does not pass through `assertReadyToFinalize` / `useToolCategoryGate().run` (the gate would block the provisioning job on an administrator's unrelated tool-category state).
 
-## Verified (initial check)
+## Verified (initial check, 2026-10-11)
 
-Local, production build (`npm run build` passes), fresh database `sb_rl_bld_11300_1`, server on port 11302, Chromium 1194 (see `docs/test-results/production-smoke-regression/` for rounds):
+Build agent, production build (`npm run build` passes), fresh database `sb_rl_bld_17100_1`, server on port 17112 (17102 was already held by a process outside this worktree and was left alone), Chromium 1194. The earlier salvaged branch was untested; everything below was run by this agent.
 
-- `node scripts/check-interface-parity.mjs`: registry matches the code; the new row has no gap. One pre-existing gap from main (`career-scoring-preferences` MCP_GAP) is not this feature's and was left.
-- Suite run locally with `SMOKE_MEMBER_PASSWORD`: 26 steps, 24 passed, 0 failed, 2 `not_run` (S3.3, R2.3). Without it: 22 passed, 4 `not_run` (S3.3, R2.1-R2.3). With a wrong password: R2.1 `fail`, R2.2 `blocked`, exit 1.
-- Provisioning script: creates on a fresh database, idempotent on re-run, refuses a wrong administrator password, a weak member password and missing secrets, with the messages in the training spec.
-- Training spec Journeys 1-5 walked once (see the build hand-off notes); Journey 6 is the production suite and is run on GitHub Actions.
+- `node scripts/check-interface-parity.mjs`: registry matches the code; the new row `production-smoke-account` has no gap. One pre-existing gap from main (`release-tracker-admin`, MCP_GAP) is not this feature's and was left.
+- Journey 1 (website, Chromium desktop 1280 and phone 390): passed, including the weak-password red alert text, create, idempotent re-run, the secrets card, no horizontal scroll, 44px button, and the test account's own sign-in landing in the World with no gates.
+- Journey 2 (API, curl): passed (401 anonymous, 403 for the member on GET and POST, 400 policy failure with four sentences, create then idempotent, `.invalid` email skipped).
+- Journey 3 (MCP): both tools listed and working with a token holding both scopes; a token with only `smoke.read` is refused with `scope_not_granted`; the Capabilities row is present. Finding: the Connected Agents form clears after each token, so the training step now says to tick the scope again.
+- Journey 4 (provisioning script): all five steps matched the spec, no password in any output.
+- Journey 5 (suite, local): 29 steps; with the password 24 passed, 0 failed, `notRun` R2.3, S3.3, S6.1-S6.3; without it 22 passed and R2.1/R2.2 `not_run`; wrong password R2.1 `fail`, R2.2 `blocked`, exit 1; the password never appears in `report.json`.
+- Merge notes: the salvaged branch conflicted with the integration branch in `mcpToolManifest.json` and `capabilityParity.js` (both sides kept), `production-smoke.mjs` (S6 skip list extended with R2.*) and the training spec (S6.1-S6.3 folded into Journey 6 as steps 21-23, so R steps are now J6.24-J6.29).
+- Journey 6 is the production suite and runs on GitHub Actions only; not run here.
 
 ## Known limitations
 
