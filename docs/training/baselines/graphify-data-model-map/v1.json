@@ -1,0 +1,768 @@
+{
+  "feature": "graphify-data-model-map",
+  "spec": "docs/training/graphify-data-model-map.md",
+  "version": 1,
+  "frozenAt": "2026-10-11T00:46:27.234Z",
+  "commitAtFreeze": "6ae96f4d222e7dc26bb30e0ce1a54041b92d9820",
+  "specSha256": "a407bca04dd4895f8bb3d4f28adc4b55a94fa43f654718f4cdc564062e92b5a4",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "592cb770c47f71ab",
+      "summary": "ADMIN WINDOW: sign in as admin@test.local at `/login`, open `/world`. Expect the World Shell with the top bar **World / Journeys / Classic Tools**."
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "9fe6106bfd34307b",
+      "summary": "MEMBER WINDOW: sign in as member@test.local at `/login`, open `/world`. Expect the World Shell with the top bar **World / Journeys / Classic Tools**."
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "27b662b2671c6691",
+      "summary": "In a shell, from the repository root, run `ls docs/data-model`. Expect exactly four names: `REPORT.md`, `catalog.json`, `graph.json`, `view.html`."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8e277a5344af9534",
+      "summary": "ADMIN WINDOW: click **Journeys**, then the card **Data model map**. Expect the panel heading **Data model map**, the breadcrumb **Sun › Journeys › Data model ma"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a6a1ca608bc6f623",
+      "summary": "Read the stamp line. Expect it to read \"Graphify 0.9.84 - generated from commit <C> on <D> - AI pass: none\" where <C> is the first nine characters of `generated"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "72fcb9cdce052499",
+      "summary": "Read the four stat tiles. Expect them in this order with these labels: **tables**, **columns**, **foreign keys**, **domains**, and numbers equal to `counts.tabl"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b5b8e023467989ba",
+      "summary": "Read the domain buttons. Expect first **All domains** (selected), then exactly ten buttons in this order: **Career (n)**, **Journey and rods (n)**, **Release an"
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b1bf52802607f135",
+      "summary": "Read the crystal view. Expect a dark panel containing a drawn canvas, the text \"Drag to turn. Tap a gem to open its table.\" and the button **Reset view**; the p"
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "db201c97d4233f6c",
+      "summary": "Read the table list. Expect one group heading per domain, each reading \"<Domain name> (n)\" with the same n as its button, and under **Career (n)** the buttons `"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0e6ed46c0ebfeeca",
+      "summary": "Click the domain button **Career (n)** (n as in [J1.4]). Expect it becomes selected (**All domains** is no longer selected), the table list shows only the one h"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e5c8045f72ae07c5",
+      "summary": "Click **All domains**. Expect all ten group headings are back in the table list."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e020439d1a281f95",
+      "summary": "Type `career_jobs` into the search box and click **Search**. Expect a note reading `1 match for \"career_jobs\".` with exactly one button **Table: career_jobs**, "
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f7d9a16620750f1e",
+      "summary": "Click **Table: career_jobs**. Expect the table detail heading **Table: career_jobs**, the pill **Career**, the line \"15 columns, primary key id\", and the button"
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ba7c9ad3b76f9e9f",
+      "summary": "Read **Columns**. Expect a table with the header Column, Type, Links to, and 15 rows; the first row reads `id` (key), type \"bigint, required\"; the second row `c"
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3aee5fa558a538bb",
+      "summary": "Read the relations. Expect **References (1)** with one button **users**, and **Referenced by (0)** with the text \"No table references this one.\""
+    },
+    {
+      "id": "J2.7",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0f844f8e0cf31831",
+      "summary": "Read the usage. Expect **Used by routes (10)** whose first line reads \"/api/career server/routes/careerMaster.js, directly\" and whose other nine lines end \", th"
+    },
+    {
+      "id": "J2.8",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1f4efd1525eca0d1",
+      "summary": "Click the button **users.id** in the `user_id` row. Expect the heading becomes **Table: users**, the pill **Members and identity**, and **Referenced by** contai"
+    },
+    {
+      "id": "J2.9",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a7c16639e7c9566a",
+      "summary": "Click **Clear**. Expect the search note disappears, the search box is empty and all ten domain groups are back in the table list."
+    },
+    {
+      "id": "J2.10",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "54c93abcd6712b0f",
+      "summary": "Type `company` into the search box and click **Search**. Expect the note `4 matches for \"company\".` followed by four buttons, each starting **Column:** (for exa"
+    },
+    {
+      "id": "J2.11",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bc24918defe9861f",
+      "summary": "Click **Clear**, type `/api/career-agents` into the search box and click **Search**. Expect the note `27 matches for \"/api/career-agents\".` and at most eight bu"
+    },
+    {
+      "id": "J2.12",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a06c64a73ebc57e7",
+      "summary": "Click **Clear**, type `zzzz_nothing` and click **Search**. Expect the note `0 matches for \"zzzz_nothing\".` followed by the line `Nothing matches. Try part of a "
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5850eb5b5a42175d",
+      "summary": "Click **Clear**. In the crystal view press the mouse inside the dark panel, drag 200px to the left, release. Expect no error box on the page, the panel is still"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3c7d98992a9df9de",
+      "summary": "Click **Reset view**. Expect the panel stays drawn and no error box appears."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7a148d168e96fc17",
+      "summary": "Click the domain button **Career (n)**, then the table list button `career_skills`. Expect the table detail heading **Table: career_skills**; the crystal view s"
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d83a0f974d3d6906",
+      "summary": "Click the tab **Settings**. Expect the sentence \"A table goes to the domain that names it exactly (an exact name beats a prefix), otherwise to the first domain "
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5499e0999bc13fa6",
+      "summary": "Clear the **Domain name** of the first block (leave it empty) and click **Save grouping**. Expect a red alert reading \"Domain 1 has no name. Give it a name and "
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4ddd9a9ec6b2f886",
+      "summary": "Type `Career` back into that **Domain name**. In the first block's **Exact table names (comma separated)** field, which reads `output_templates`, change it to `"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "335b32aecb2a37f5",
+      "summary": "Click the tab **Map**. Expect the domain button **Career (n+1)** (one more than in [J1.4]) and **Leads, commerce and proposals (m-1)** (one fewer than in [J1.4]"
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d5e6b7772bc28e67",
+      "summary": "Reload the browser page, click **Journeys**, the card **Data model map**, then the tab **Settings**. Expect \"Currently: your saved grouping.\" and the first bloc"
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7112c50fdad786ed",
+      "summary": "Click **Restore default grouping**. Expect the line \"Back to the shipped default grouping.\" and the explanation \"Currently: the shipped default.\" Click the tab "
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "806a9263c8bcd600",
+      "summary": "Search `career_jobs`, click **Search**, click **Table: career_jobs**, then click **Use as a data object**. Expect a note \"Picker key: career_jobs (copied when y"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "32f7326e80ec6676",
+      "summary": "In the **Columns** table click the button **Use field** in the `company` row (its accessible name is \"Use career_jobs.company as a field\"). Expect the note now "
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c37a7b4e0beb75ad",
+      "summary": "ADMIN WINDOW: open **Journeys** -> **Connected Agents**, type `Data model agent` into **Token name**, tick **datamodel.read** and **datamodel.write**, click **C"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "4de0b565b3bd9fba",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> list`. Expect exit code 0 and exactly these lines in this order: `data_model_catalog_read`"
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "0a0c66dc2bb31431",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call data_model_table_read '{\"table\": \"career_jobs\"}'`. Expect `isError: false` and a prin"
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "45d0aa736fed9001",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call data_model_search '{\"query\": \"company\"}'`. Expect `isError: false` and `result.total`"
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "7bc6516da256afa9",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call data_model_picker '{\"object\": \"career_jobs\", \"query\": \"comp\"}'`. Expect `isError: fal"
+    },
+    {
+      "id": "J6.6",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c45797bd35ad8467",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call data_model_table_read '{\"table\": \"no_such_table\"}'`. Expect `isError: true` and an er"
+    },
+    {
+      "id": "J6.7",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "f7f642089b2f78ce",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call data_model_rules_save '{\"domains\": [{\"label\": \" \", \"color\": \"#C4843A\"}]}'`. Expect `i"
+    },
+    {
+      "id": "J6.8",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "9e7058f9789e44c8",
+      "summary": "Run `curl -s -c admin.jar -H \"Content-Type: application/json\" -d '{\"email\":\"admin@test.local\",\"password\":\"<ADMIN_PASSWORD>\"}' <API_BASE>/api/auth/login`, then `"
+    },
+    {
+      "id": "J6.9",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "5e014d13b443b67d",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" <API_BASE>/api/data-model/catalog`. Expect `401` (no cookie)."
+    },
+    {
+      "id": "J6.10",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3031cebdf0ea267f",
+      "summary": "MEMBER WINDOW: open **Journeys**. Expect the card **Connected Agents** and no card **Data model map**."
+    },
+    {
+      "id": "J6.11",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "825508b005a5ce0b",
+      "summary": "MEMBER WINDOW: open **Connected Agents**, type `Member probe` into **Token name**, tick **datamodel.read**, click **Create token** (keep the token as **TOKEN_M*"
+    },
+    {
+      "id": "J6.12",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "8cfde1f3ff1fb635",
+      "summary": "Run `curl -s -c member.jar -H \"Content-Type: application/json\" -d '{\"email\":\"member@test.local\",\"password\":\"TestPass!2345\"}' <API_BASE>/api/auth/login`, then `c"
+    },
+    {
+      "id": "J6.13",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "240cda4beddd479d",
+      "summary": "ADMIN WINDOW: open **Journeys** -> **Capabilities** and find the cards **Open the data model map: domains, tables, search, one table with its columns, relations"
+    },
+    {
+      "id": "J6.14",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "dd4474884025637d",
+      "summary": "Run `node scripts/check-interface-parity.mjs`. Expect the last line `OK: the registry matches the code.`"
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7e1fc725dd1a0999",
+      "summary": "Run `python3 -m venv <SCRATCH>/venv` then `<SCRATCH>/venv/bin/pip install /var/tmp/sbpg/uploads/graphifyy-0.9.84-py3-none-any.whl 'psycopg[binary]' tree-sitter-"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c0f7f77f436c2946",
+      "summary": "Run `GRAPHIFY_PYTHON=<SCRATCH>/venv/bin/python GRAPHIFY_PG_ADMIN_URL=postgres://postgres@127.0.0.1:5433/postgres node scripts/graphify-data-model.mjs --out <SCR"
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e0f9a24d0c6e539b",
+      "summary": "Run `ls <SCRATCH>/out`. Expect exactly `REPORT.md`, `catalog.json`, `graph.json`, `view.html`. Run `psql -h /tmp -p 5433 -U postgres -Atc \"select count(*) from "
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "2aea583b750a701d",
+      "summary": "Run `node -e \"const a=require('<SCRATCH>/out/catalog.json'),b=require('./docs/data-model/catalog.json');console.log(a.graphify.version,a.graphify.llmPass,a.grap"
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "d9f0174908702186",
+      "summary": "Run `grep -o \"<polygon\" <SCRATCH>/out/view.html | wc -l`. Expect a number equal to `counts.tables` in `docs/data-model/catalog.json`. Run `git status --short do"
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "009a259de75f7808",
+      "summary": "ADMIN WINDOW at 390px wide: open `/world`, click **Journeys**, the card **Data model map**. Expect the panel, the four stat tiles wrapping into rows, and no hor"
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "30c1617b65ab9da4",
+      "summary": "Check tap targets. Expect the search box, **Search**, **Clear**, **All domains**, every domain button, **Reset view**, the tabs **Map** and **Settings** and eve"
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3fce5d957938696d",
+      "summary": "Type `career_jobs`, tap **Search**, tap **Table: career_jobs**. Expect the table detail appears below the table list (one column) with **Table: career_jobs**, a"
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "84b8c0cb97fa21e0",
+      "summary": "Tap **Use field** in the `company` row. Expect \"Picker key: career_jobs.company (copied when your browser allows it). A flow builder stores this key.\""
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7dc3cb1f6fdb57b9",
+      "summary": "Tap the tab **Settings**, clear the first **Domain name**, tap **Save grouping**. Expect the red alert \"Domain 1 has no name. Give it a name and save again.\" fu"
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f36537a8f04174d8",
+      "summary": "Tap the tab **Map**, tap **Clear**, then tap the domain button **Agents (n)**. Expect the table list shows only the heading \"Agents (n)\" and the crystal view is"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "deb4e59300d29464",
+      "summary": "On the **Map** tab click **Search** with the search box empty. Expect no error box, no note, and the table list unchanged (all groups)."
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "aff644cbe0a7eb00",
+      "summary": "Search `CAREER_JOBS` (capitals). Expect `1 match for \"CAREER_JOBS\".` with the button **Table: career_jobs** (search ignores capitals)."
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2eb416c7439e5aaf",
+      "summary": "Run `GRAPHIFY_PYTHON=/nonexistent node scripts/graphify-data-model.mjs; echo \"exit=$?\"`. Expect output beginning `graphify-data-model: Graphify is not installed"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7a19bf0a23463bee",
+      "summary": "Run `GRAPHIFY_PG_ADMIN_URL=postgres://u@db.example.com/postgres node scripts/graphify-data-model.mjs; echo \"exit=$?\"`. Expect `graphify-data-model: Refusing to "
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "61d2c1d1ac016fa4",
+      "summary": "On the **Settings** tab click **Add a domain**, leave **New domain** as it is and click **Save grouping**, then open the **Map** tab. Expect \"Saved. The groupin"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "35311976050939bf",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call data_model_rules_save '{\"reset\": true}'`. Expect `isError: false` and a `result` with"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "2e9b3c85cc956396"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Open the map and read its stamp",
+      "kind": "journey",
+      "hash": "c0d79111264c1988"
+    },
+    {
+      "title": "Journey 2 — Filter, search and read one table",
+      "kind": "journey",
+      "hash": "52b7ca409ed14750"
+    },
+    {
+      "title": "Journey 3 — The crystal view",
+      "kind": "journey",
+      "hash": "7cfeaf6cc8d7dc86"
+    },
+    {
+      "title": "Journey 4 — Edit the domain grouping from the screen",
+      "kind": "journey",
+      "hash": "b3c8f058d0d9660f"
+    },
+    {
+      "title": "Journey 5 — The data-object / field picker",
+      "kind": "journey",
+      "hash": "4710bbe263a0be41"
+    },
+    {
+      "title": "Journey 6 — The same actions through the API and MCP, with the same permissions",
+      "kind": "journey",
+      "hash": "6932a63588a895a0"
+    },
+    {
+      "title": "Journey 7 — Regenerate the map with Graphify, locally only",
+      "kind": "journey",
+      "hash": "3d3c199b28b633eb"
+    },
+    {
+      "title": "Journey 8 — The whole map on a phone (390px)",
+      "kind": "journey",
+      "hash": "15b367640a33b6e3"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}
