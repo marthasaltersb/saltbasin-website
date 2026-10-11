@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:12:56.829Z",
+  "exportedAt": "2026-10-11T01:19:10.075Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -98,11 +98,11 @@
       "backlog": 0
     },
     "graphify-data-model-map": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 5,
+      "status": "fix",
+      "lastRound": 1,
+      "lastScore": "59/60",
+      "lastReport": "docs/test-results/graphify-data-model-map/round-1.md",
+      "openBugs": 6,
       "backlog": 0
     },
     "tracker-world-navigation": {
@@ -122,11 +122,11 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "60/65",
       "lastReport": "docs/test-results/platform-mcp/round-4.md",
-      "openBugs": 21,
+      "openBugs": 25,
       "backlog": 3
     },
     "proficiency-live-qr": {
@@ -1582,7 +1582,7 @@
     {
       "id": "graphify-data-model-map-B6",
       "feature": "graphify-data-model-map",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "J6.11/J6.12, island, routes",
@@ -1592,7 +1592,11 @@
         "src/lib/worldIslands.js",
         "server/lib/mcpToolRegistry.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "server/routes/dataModelMap.js uses requireAdmin (lines 5 and 9), copied from the render-b…"
+      },
       "history": [
         {
           "round": 0,
@@ -1605,7 +1609,7 @@
     {
       "id": "graphify-data-model-map-B7",
       "feature": "graphify-data-model-map",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "journey-flow picker",
@@ -1613,7 +1617,11 @@
       "files": [
         "server/lib/dataModelMap.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "server/lib/dataModelMap.js getRules() imports db.js unconditionally (line 38). The change…"
+      },
       "history": [
         {
           "round": 0,
@@ -1626,7 +1634,7 @@
     {
       "id": "graphify-data-model-map-B8",
       "feature": "graphify-data-model-map",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "baseline freeze",
@@ -1634,7 +1642,11 @@
       "files": [
         "docs/training/baselines/graphify-data-model-map/v1.json"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request asked for baseline v1 to be frozen. The file now exists at the integration he…"
+      },
       "history": [
         {
           "round": 0,
@@ -1647,7 +1659,7 @@
     {
       "id": "graphify-data-model-map-B9",
       "feature": "graphify-data-model-map",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "known limitation: code graph",
@@ -1656,7 +1668,11 @@
         "src/components/admin/DataModelMapPanel.jsx",
         "server/lib/dataModelMap.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request asked for code mode over server/ and src/. The change spec (line 56) says the…"
+      },
       "history": [
         {
           "round": 0,
@@ -1669,7 +1685,7 @@
     {
       "id": "graphify-data-model-map-B10",
       "feature": "graphify-data-model-map",
-      "status": "open",
+      "status": "fixing",
       "class": "informational",
       "attempts": 0,
       "step": "CLAUDE.md note",
@@ -1677,12 +1693,42 @@
       "files": [
         "CLAUDE.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "CLAUDE.md has no mention of graphify or the data model map. This is this feature's own do…"
+      },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-r1-1",
+      "feature": "graphify-data-model-map",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "AMBIGUOUS: spec says the breadcrumb reads 'Sun › Journeys › Data model map' at both widths, but at 390px the shared World Shell breadcrumb collapses to '… › Da…",
+      "rootCause": "The step text omits the shared phone behaviour. src/components/WorldBreadcrumbs.jsx line 67 sets collapsed = narrow && crumbs.length > 2 an…",
+      "files": [
+        "src/components/WorldBreadcrumbs.jsx",
+        "docs/training/graphify-data-model-map.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Product matches the shared documented breadcrumb collapse (WorldBreadcrumbs.jsx line 67).…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "The step text omits the shared phone behaviour. src/compone…",
           "commit": null
         }
       ]
@@ -1852,9 +1898,92 @@
       "url": "https://saltbasin.net/mcp"
     },
     {
+      "id": "platform-mcp-F4-2",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J1.4, J2.1, J6.2, J11.2",
+      "rootCause": "The registry, scopes and parity map grew append-only after A5 pinned the literals. No new amendment was filed.",
+      "files": [
+        "docs/spec-amendments/platform-mcp/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F4-3",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Change-spec text",
+      "rootCause": "The round 4 docs update covered only the fix note.",
+      "files": [
+        "docs/changes/platform-mcp.md",
+        "docs/changes/live-release-tracker.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F4-4",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J1.4 (Connected Agents alerts)",
+      "rootCause": "The error state is appended instead of replaced.",
+      "files": [
+        "src/components/admin/ConnectedAgentsPanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F4-5",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "J10.4 (browser walk)",
+      "rootCause": "The data shows 0 gaps. The message was added in round 2 and was not walked in Chromium at 1280 or 390 px.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "platform-mcp-r4-T1",
       "feature": "platform-mcp",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Import an application package card has no gap; Gaps only shows zero cards (also the exit code of --strict in J11.2)",
