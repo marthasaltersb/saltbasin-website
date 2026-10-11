@@ -28,6 +28,9 @@ export const MCP_SCOPES = Object.freeze({
   'renderings.read': 'Read renderings, their data map, history and pending changes',
   'renderings.write': 'Propose or make a change to a mapped source value (live or for approval, by the binding policy)',
   'renderings.approve': 'Approve or reject a pending data change; settings (administrators only; runs the finalization gate)',
+  'flows.read': 'Read journey flows, templates, history and the studio definition',
+  'flows.write': 'Create, save, import, restore and template journey flows; change the studio definition (the studio access policy still applies)',
+  'flows.publish': 'Publish a journey flow as the journey definition (runs the finalization gate, same as the website)',
   'agent.runner.read': 'Read agent runner settings, the agent roster, runs, outputs, test plans and backlog seeds (administrators only)',
   'agent.runner.write': 'Prompt agents, stop runs, decide scope requests and proposals, change runner settings and move backlog seeds (administrators only)',
 });
@@ -45,6 +48,7 @@ async function versionHistoryOr404(userId, outputId) {
 }
 
 import { ROUTE_TOOLS } from './mcpRouteTools.js';
+import { FLOW_STUDIO_TOOLS } from './mcpFlowStudioTools.js';
 
 /** Release loop tools: same functions and error statuses as server/routes/releaseLoop.js; the admin check is the registry's permission. */
 const rlActor = (user) => ({ id: user.id, label: user.name || user.email || `user ${user.id}` });
@@ -1084,7 +1088,7 @@ const CORE_TOOLS = [
 
 // Tools that run an existing website route's own handler in-process (see mcpRouteTools.js), appended after the
 // core tools. Append-only like everything above.
-export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS]);
+export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS, ...FLOW_STUDIO_TOOLS]);
 
 export const MCP_TOOL_NAMES = Object.freeze(MCP_TOOLS.map((t) => t.name));
 

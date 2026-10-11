@@ -456,10 +456,10 @@ async function bootstrap() {
     -- data, and existing rod_types (member/customer/revenue_lifecycle etc.)
     -- keep exactly the enforcement they always had.
     DROP INDEX IF EXISTS idx_rods_user_type;
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type NOT IN ('member_entitlement','commercial_opportunity_target','career_opportunity_target') AND NOT (metadata ? 'scenarioKey');
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type NOT IN ('member_entitlement','commercial_opportunity_target','career_opportunity_target','journey_flow') AND NOT (metadata ? 'scenarioKey');
     CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_entitlement_module ON journey_data_rods (user_id, module_key) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type = 'member_entitlement';
     DROP INDEX IF EXISTS idx_rods_user_org_type;
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_org_type ON journey_data_rods (user_id, org_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NOT NULL AND rod_type NOT IN ('commercial_opportunity_target','career_opportunity_target');
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_org_type ON journey_data_rods (user_id, org_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NOT NULL AND rod_type NOT IN ('commercial_opportunity_target','career_opportunity_target','journey_flow');
     CREATE INDEX IF NOT EXISTS idx_rods_org ON journey_data_rods (org_id, rod_type);
     CREATE INDEX IF NOT EXISTS idx_rods_parent ON journey_data_rods (parent_rod_id);
 
@@ -1294,6 +1294,7 @@ async function bootstrap() {
     ['l2r_future_state', 'Future-State Definition', "A client's target-state definition per capability, Tributary-linked to its originating l2r_diagnostic rod — the Definition Studio's future-state half (2026-08-09, Phase 1; real UI deferred to Phase 3).", true, 19],
     ['career_outreach_effort', 'Career Outreach Effort', "A member's hiring-manager-research + direct-outreach process for one applied-to career opportunity — Tributary-linked (hierarchical) to the career_opportunity_target rod it's pursuing outreach for (2026-08-09).", true, 8],
     ['public_site_dev_lifecycle', 'Public Site Dev Lifecycle', "The Salt Basin Website module's connected journeys: Definition, Design & Config Setup, Site Composition, and Site Workflow (2026-09-06). Only Design & Config Setup Journey's scenario/gates are seeded so far — see scenarioLibrary.js.", true, 20],
+    ['journey_flow', 'Journey Flow', 'A process flow / journey definition authored in the Journey flow studio: versioned draft and published documents, history as events (2026-10-10, docs/changes/journey-flow-studio.md).', true, 21],
     ['source_document', 'Source Document', 'An uploaded primary source (Word doc, plain text, Markdown, PDF, image, SVG, or scanned handwriting) run through deterministic structural parsing into title/subtitle/heading/paragraph/sentence/word Atoms, human-validated into an immutable provenance record — one rod per uploaded document (2026-09-06, Source Document Intelligence Phase 1).', true, 9],
   ]) {
     await sql.unsafe(
@@ -3335,6 +3336,8 @@ async function bootstrap() {
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'session-mapping', label: 'Sessions', componentId: 'sessionMapping', sortOrder: 7 },
         // Render bindings: data map + pending changes (additive; reachable from the World Shell).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'render-bindings', label: 'Render Bindings', componentId: 'renderBindings', sortOrder: 8 },
+        // Journey flow studio: metadata-driven process flow builder (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'journey-flow-studio', label: 'Journey Flow Studio', componentId: 'flowStudio', sortOrder: 9 },
       ];
 
       for (const t of newTabs) {
