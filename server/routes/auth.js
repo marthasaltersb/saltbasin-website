@@ -112,7 +112,9 @@ router.post('/logout', async (req, res) => {
 
 router.get('/me', async (req, res) => {
   const user = await getUserFromCookie(req);
-  res.json({ user });
+  if (!user) return res.json({ user });
+  const { grantedPermissions } = await import('../lib/permissions.js');
+  res.json({ user: { ...user, permissions: await grantedPermissions(user) } });
 });
 
 router.get('/password-policy', (_req, res) => res.json(PASSWORD_POLICY));

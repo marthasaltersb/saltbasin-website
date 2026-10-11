@@ -49,6 +49,7 @@ export const api = {
   // Data model map (admin): Graphify catalog of tables, columns, relations and usage; picker source; grouping rules.
   dmCatalog: () => request('/api/data-model/catalog'),
   dmSearch: (q) => request(`/api/data-model/search?q=${encodeURIComponent(q)}`),
+  dmCode: (file) => request(`/api/data-model/code${file ? `?file=${encodeURIComponent(file)}` : ''}`),
   dmTable: (name) => request(`/api/data-model/tables/${encodeURIComponent(name)}`),
   dmPicker: (params = {}) => request(`/api/data-model/picker?${new URLSearchParams(params)}`),
   dmRules: () => request('/api/data-model/rules'),

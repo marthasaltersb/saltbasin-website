@@ -1,4 +1,4 @@
-// Data model map (World Shell island, administrators; docs/changes/graphify-data-model-map.md).
+// Data model map (World Shell island, datamodel.read permission - administrators by default; docs/changes/graphify-data-model-map.md).
 // The platform's own data model drawn as one crystal-family view: every table is a gem (src/lib/crystalGeometry.js
 // buildGemMesh), grouped by domain around the core crystal, joined to the tables it references. Built from the
 // committed Graphify catalog (docs/data-model/catalog.json) - schema names only, never row data. The 3D view is
@@ -282,6 +282,57 @@ function SettingsTab({ onSaved }) {
   );
 }
 
+/** Code-module view: Graphify communities of modules, one module's imports, importers and the tables it uses. */
+function CodeTab({ onOpenTable }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const [file, setFile] = useState('');
+  const [detail, setDetail] = useState(null);
+  const [q, setQ] = useState('');
+  useEffect(() => { api.dmCode().then(setData).catch((e) => { const m = e.message || 'The code view could not be loaded.'; setError(m); toast.error(m); }); }, []);
+  useEffect(() => {
+    if (!file) { setDetail(null); return; }
+    api.dmCode(file).then((d) => { setDetail(d); setError(''); }).catch((e) => { setError(e.message); toast.error(e.message); });
+  }, [file]);
+  if (!data) return error ? <div className="alert" role="alert" data-testid="dm-code-error">{error}</div> : <div className="sub">Loading...</div>;
+  const needle = q.trim().toLowerCase();
+  const groups = data.communities.map((c) => ({ ...c, modules: c.modules.filter((m) => !needle || m.file.toLowerCase().includes(needle)) })).filter((c) => c.modules.length);
+  return (
+    <div data-testid="dm-code">
+      {error && <div className="alert" role="alert">{error}</div>}
+      <p className="sub" data-testid="dm-code-counts">{data.counts.modules} code modules, {data.counts.importLinks} import links, {data.counts.tableLinks} module-to-table links. Modules are grouped by Graphify community.</p>
+      <div className="searchrow"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter modules" aria-label="Filter modules" /></div>
+      <div className="grid">
+        <div className="list" data-testid="dm-code-list">
+          {!groups.length && <div className="sub" style={{ padding: '.5rem' }}>No modules match that filter.</div>}
+          {groups.map((c) => (
+            <div key={c.community}>
+              <div className="dom">Community {c.community} ({c.moduleCount} modules)</div>
+              {c.modules.map((m) => (
+                <button type="button" className="tbl" key={m.file} data-module={m.file} aria-current={file === m.file} onClick={() => setFile(m.file)}>
+                  <span>{m.file}</span><span className="n">{m.symbols} symbols</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+        {detail ? (
+          <div className="detail" data-testid="dm-code-detail">
+            <h2>{detail.file}</h2>
+            <p className="sub">Community {detail.community}, {detail.symbols} symbols</p>
+            <h2>Imports ({detail.imports.length})</h2>
+            {detail.imports.map((f) => <div key={f}><button type="button" onClick={() => setFile(f)} style={{ minHeight: 44 }}>{f}</button></div>)}
+            <h2>Imported by ({detail.importedBy.length})</h2>
+            {detail.importedBy.map((f) => <div key={f}><button type="button" onClick={() => setFile(f)} style={{ minHeight: 44 }}>{f}</button></div>)}
+            <h2>Tables used ({detail.tables.length})</h2>
+            {detail.tables.map((t) => <div key={t}><button type="button" onClick={() => onOpenTable(t)} style={{ minHeight: 44 }}>{t}</button></div>)}
+          </div>
+        ) : <div className="detail sub">Pick a module to see what it imports, what imports it and which tables it uses.</div>}
+      </div>
+    </div>
+  );
+}
+
 export default function DataModelMapPanel() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState('');
@@ -333,9 +384,10 @@ export default function DataModelMapPanel() {
       )}
       <div className="tabs" role="tablist">
         <button type="button" role="tab" aria-selected={tab === 'map'} onClick={() => setTab('map')}>Map</button>
+        <button type="button" role="tab" aria-selected={tab === 'code'} onClick={() => setTab('code')}>Code</button>
         <button type="button" role="tab" aria-selected={tab === 'settings'} onClick={() => setTab('settings')}>Settings</button>
       </div>
-      {tab === 'settings' ? <SettingsTab onSaved={load} /> : !summary ? (!error && <div className="sub">Loading...</div>) : (
+      {tab === 'settings' ? <SettingsTab onSaved={load} /> : tab === 'code' ? <CodeTab onOpenTable={(t) => { setSelected(t); setTab('map'); }} /> : !summary ? (!error && <div className="sub">Loading...</div>) : (
         <>
           <form className="searchrow" onSubmit={runSearch} role="search">
             <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tables, columns or routes" aria-label="Search tables, columns or routes" />

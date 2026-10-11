@@ -83,6 +83,9 @@ export async function executeTool(name, args, ctx) {
     if (!ctx.token.scopes.includes(tool.scope)) {
       return errorResult(403, 'scope_not_granted', `This access token does not include the "${tool.scope}" scope needed for ${tool.name}. Create a token with that scope in Connected Agents.`);
     }
+    if (tool.permission === 'permission' && !(await (await import('./permissions.js')).hasPermission(ctx.user, tool.scope))) {
+      return errorResult(403, 'forbidden', `${tool.name} is for administrators only. You are signed in as a ${ctx.user.role}.`);
+    }
     if (tool.permission === 'admin' && ctx.user.role !== 'admin') {
       return errorResult(403, 'forbidden', `${tool.name} is for administrators only. You are signed in as a ${ctx.user.role}.`);
     }
